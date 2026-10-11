@@ -26,6 +26,8 @@ Seedance 美术管线：UI 整体切图
 
 ## 可用 Unity Editor 工具 —— 160 个
 
+Unity CLI 参考文档:<https://docs.unity.com/zh-cn/unity-cli/unity-cli-reference>
+
 来源:`unity list`(Unity CLI `1.0.0-beta.13`,经 `com.unity.pipeline` 0.8.0-exp.1 连接 Editor)。
 `unity command` 的 tag 汇总为 47 个分组。主要类别:
 
