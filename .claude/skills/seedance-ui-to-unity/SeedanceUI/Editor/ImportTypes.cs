@@ -10,7 +10,7 @@ namespace Seedance.UiImport.Editor
         public UiImportException(string message) : base(message) { }
     }
 
-    /// <summary>seedance_ui_import 的请求（skill 写成 JSON 文件传进来）</summary>
+    /// <summary>unity command seedance ui_import 的请求（skill 写成 JSON 文件传进来）</summary>
     [Serializable]
     public class ImportRequest
     {

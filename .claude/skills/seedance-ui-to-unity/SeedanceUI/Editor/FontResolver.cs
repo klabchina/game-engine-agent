@@ -29,7 +29,7 @@ namespace Seedance.UiImport.Editor
             if (existing != null) return existing;
             // 生成字体资产要读 TMP Settings
             if (!TmpEssentialsReady())
-                throw new UiImportException("工程还没导入 TMP Essential Resources，先跑 seedance_ui_prepare 并等 Editor 导入完成");
+                throw new UiImportException("工程还没导入 TMP Essential Resources，先跑 unity command seedance ui_prepare 并等 Editor 导入完成");
 
             var fontDst = $"{fontsDir}/{UiNaming.ToAscii(Path.GetFileNameWithoutExtension(fontFilePath))}{Path.GetExtension(fontFilePath)}";
             if (!File.Exists(fontDst)) File.Copy(fontFilePath, fontDst);
@@ -54,7 +54,7 @@ namespace Seedance.UiImport.Editor
 
         /// <summary>
         /// 开始导入 TMP Essential Resources。AssetDatabase.ImportPackage 是延迟执行的——调用返回后 Editor 才真正导入，
-        /// 所以这一步单独成一个 CLI 命令（seedance_ui_prepare），等 Editor 导完再跑导入。
+        /// 所以这一步单独成一个 CLI 命令（unity command seedance ui_prepare），等 Editor 导完再跑导入。
         /// </summary>
         public static void StartTmpEssentialsImport()
         {

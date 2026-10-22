@@ -31,7 +31,7 @@ namespace Seedance.UiImport.Editor
             if (doc.elements.Any(e => e.IsText))
             {
                 if (!FontResolver.TmpEssentialsReady())
-                    throw new UiImportException("工程还没导入 TMP Essential Resources，先跑 seedance_ui_prepare 并等 Editor 导入完成");
+                    throw new UiImportException("工程还没导入 TMP Essential Resources，先跑 unity command seedance ui_prepare 并等 Editor 导入完成");
                 font = FontResolver.Resolve(req.tmpFont, req.fontFile, importDir);
             }
 

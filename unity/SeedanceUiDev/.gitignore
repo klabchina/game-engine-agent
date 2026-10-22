@@ -10,3 +10,8 @@ test-results.xml
 # 由 .claude/skills/seedance-ui-to-unity/scripts/install_package.sh 生成，源码在 skill 目录
 Assets/SeedanceUI/
 Assets/SeedanceUI.meta
+# 手动跑 seedance ui_import 的产物
+Assets/UI/
+Assets/UI.meta
+Assets/Product/
+Assets/Product.meta

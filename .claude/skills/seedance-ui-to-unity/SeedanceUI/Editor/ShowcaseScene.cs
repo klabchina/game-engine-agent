@@ -17,6 +17,9 @@ namespace Seedance.UiImport.Editor
     {
         public const string ScenePath = "Assets/Product/Scene/UIShowcase.unity";
 
+        /// <summary>展示场景与离屏截图共用的底色（深灰，透明切图在上面看得清）</summary>
+        public static readonly Color BackgroundColor = new Color(0.18f, 0.18f, 0.2f);
+
         /// <summary>没有任何对象的场景文件，Unity 能直接打开</summary>
         internal const string EmptySceneYaml = "%YAML 1.1\n%TAG !u! tag:unity3d.com,2011:\n";
 
@@ -88,7 +91,7 @@ namespace Seedance.UiImport.Editor
             var cam = new GameObject("Main Camera", typeof(Camera));
             var camera = cam.GetComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.18f, 0.18f, 0.2f);
+            camera.backgroundColor = BackgroundColor;
             SceneManager.MoveGameObjectToScene(cam, scene);
 
             var canvasGo = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));

@@ -2,6 +2,7 @@
     "name": "Seedance.UiImport.Editor.Cli",
     "rootNamespace": "Seedance.UiImport.Editor",
     "references": [
+        "Seedance.UiImport.Runtime",
         "Seedance.UiImport.Editor",
         "Unity.Pipeline.Attributes"
     ],
