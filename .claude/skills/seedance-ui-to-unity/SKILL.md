@@ -10,7 +10,8 @@ description: Use when importing a Seedance ui-maker UI (the layout.json + slices
 ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# 包 `SeedanceUI` 解析成 UGUI Prefab。本 skill 负责：把包推进目标工程 → 在运行中的 Editor 里调一次 `unity command seedance ui_import` → 离屏截图与 `preview.png` 对照 → 汇报。
 
 - 节点、Sprite 一律 ASCII 命名（`button_e7`、`slot_e2.png`），中文名存在节点的 `SeedanceUiElement.sourceName`。
-- 重导只更新 **Sprite、位置、尺寸**；文字、父节点、顺序、组件、显隐归程序，不碰。产物里没了的元素设 inactive，不删。
+- 重导只更新 **Sprite、位置、尺寸**；文字、同级顺序、已有组件、显隐归程序，不碰。父节点只在程序没挪过时跟着上游改。产物里没了的元素设 inactive，不删。
+- 同一个字体在工程里只生成一份 TMP 字体资产，后导入的 UI 共用它。
 - Prefab 根不带 Canvas；工程里会有一个展示场景 `Assets/Product/Scene/UIShowcase.unity`（带 Canvas，首次导入时创建）。
 
 `SKILL_DIR` = 本文件所在目录。下面所有 `unity` 命令都带 `--no-banner --project-path "$PROJECT"`——本机常同时开着别的工程的 Editor。
@@ -36,7 +37,11 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
    - 没有：`unity open "$PROJECT"`，再 `unity status --until-ready --project-path "$PROJECT"`。刚打开的 Editor 会自己编译，**不要**马上 `recompile`（会返回 503 Server Busy）。
    - 已经开着：`unity recompile --project-path "$PROJECT"`，让它编译刚推进去的包。
    - 最后确认 `unity list --project-path "$PROJECT"` 里有 `ui_import`（分组 `seedance`）；没有就再 `unity status --until-ready` 后重查一次。
-4. **TMP 基础资源**：`unity command seedance ui_prepare --result-only`。返回 `"importing"` 就 `unity status --until-ready` 后再调，直到 `"ready"`（最多 5 次）。
+4. **TMP 基础资源**：
+   ```bash
+   unity --no-banner command seedance ui_prepare --project-path "$PROJECT" --result-only
+   ```
+   返回 `"importing"` 就 `unity --no-banner status --until-ready --project-path "$PROJECT"` 后再调，直到 `"ready"`（最多 5 次）。
 5. **字体**：没给 `TMP_FONT`、而 `layout.json` 里有 `"type": "text"` 时（zip 用 `unzip -p "$SOURCE" layout.json` 看），`FONT_FILE=$(bash "$SKILL_DIR/scripts/fetch_font.sh")`，并告诉用户默认用的是 Noto Sans CJK SC（SIL OFL，可随游戏分发）。
 6. **导入**：把请求写进临时 JSON（有 scratchpad 就放 scratchpad），字段 `source` `importDir` `prefabName` `tmpFont` `fontFile`，没有的留空串。
    ```bash
@@ -57,7 +62,7 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
 | `created` / `updated` | 新建 / 刷新了 Sprite 与位置的节点 | — |
 | `deactivated` | 产物里没了，节点已设 inactive | 确认不要了再手动删 |
 | `missing` | 上游没出图，只建了占位 | 回 ui-maker 重出这一层 |
-| `moved` | 节点被程序挪到别的父节点下，没更新位置 | 需要的话手动对齐 |
+| `moved` | 节点被程序挪到别的父节点下：只更新了尺寸，位置没动 | 需要的话手动对齐 |
 | `typeChanged` | 类型和首次导入时不同，组件没改 | 手动加 / 删 Button 等组件 |
 | `orphanSprites` | `Sprites/` 下本次没用到的图（没删） | 确认没被引用后删 |
 

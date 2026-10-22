@@ -23,14 +23,17 @@ namespace Seedance.UiImport.Editor
             if (!File.Exists(fontFilePath)) throw new UiImportException($"字体文件不存在：{fontFilePath}");
 
             var fontsDir = importDir.TrimEnd('/') + "/Fonts";
-            Directory.CreateDirectory(fontsDir);
             var assetPath = $"{fontsDir}/{UiNaming.FontAssetName(fontFilePath)}.asset";
             var existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(assetPath);
             if (existing != null) return existing;
+            // 同一个字体文件，别的导入目录已经生成过就共用，免得每套 UI 各拷一份十几 MB 的字体、各有一张动态 atlas
+            var shared = FindGenerated(Path.GetFileNameWithoutExtension(assetPath));
+            if (shared != null) return shared;
             // 生成字体资产要读 TMP Settings
             if (!TmpEssentialsReady())
                 throw new UiImportException("工程还没导入 TMP Essential Resources，先跑 unity command seedance ui_prepare 并等 Editor 导入完成");
 
+            Directory.CreateDirectory(fontsDir);
             var fontDst = $"{fontsDir}/{UiNaming.ToAscii(Path.GetFileNameWithoutExtension(fontFilePath))}{Path.GetExtension(fontFilePath)}";
             if (!File.Exists(fontDst)) File.Copy(fontFilePath, fontDst);
             AssetDatabase.ImportAsset(fontDst);
@@ -47,6 +50,17 @@ namespace Seedance.UiImport.Editor
             AssetDatabase.AddObjectToAsset(fa.material, fa);
             AssetDatabase.SaveAssets();
             return fa;
+        }
+
+        static TMP_FontAsset FindGenerated(string assetName)
+        {
+            foreach (var guid in AssetDatabase.FindAssets($"{assetName} t:TMP_FontAsset"))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (Path.GetFileNameWithoutExtension(path) == assetName && path.Contains("/Fonts/"))
+                    return AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+            }
+            return null;
         }
 
         /// <summary>工程里已经有 TMP Essential Resources（TMP Settings、默认 shader）</summary>

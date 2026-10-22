@@ -15,5 +15,10 @@ namespace Seedance.UiImport
         public string sourceName;
         /// <summary>首次导入时的元素类型（panel、button、text…）</summary>
         public string type;
+        /// <summary>
+        /// 上次导入时 layout.json 里的父元素 id（挂在根下为 "&lt;root&gt;"）。重导时节点的实际父节点还是它，
+        /// 说明程序没挪过，可以跟着上游改父级；对不上才算程序挪走的
+        /// </summary>
+        public string layoutParentId;
     }
 }

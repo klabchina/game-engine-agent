@@ -13,8 +13,6 @@ namespace Seedance.UiImport.Tests
         [TearDown]
         public void TearDown() => AssetDatabase.DeleteAsset(TestPaths.OutDir);
 
-        const string FontAssetPath = TestPaths.OutDir + "/Fonts/NotoSansCJKsc-Regular_SDF.asset";
-
         [Test]
         public void Resolve_ExistingAsset()
         {
@@ -40,9 +38,11 @@ namespace Seedance.UiImport.Tests
         public void Resolve_FromFontFile_CreatesPersistentAsset()
         {
             var fa = FontResolver.Resolve(null, TestPaths.RequireCachedFont(), TestPaths.OutDir);
-            Assert.AreEqual(FontAssetPath, AssetDatabase.GetAssetPath(fa));
-            Assert.IsTrue(File.Exists(TestPaths.OutDir + "/Fonts/NotoSansCJKsc-Regular.otf"));
-            var subs = AssetDatabase.LoadAllAssetsAtPath(FontAssetPath);
+            // 工程里别处已经生成过同一字体时会共用那份（见 Resolve_ReusesFontGeneratedByAnotherImport），所以只认文件名
+            var path = AssetDatabase.GetAssetPath(fa);
+            StringAssert.EndsWith("/Fonts/NotoSansCJKsc-Regular_SDF.asset", path);
+            Assert.IsTrue(File.Exists(Path.GetDirectoryName(path) + "/NotoSansCJKsc-Regular.otf"));
+            var subs = AssetDatabase.LoadAllAssetsAtPath(path);
             Assert.IsTrue(subs.OfType<Texture2D>().Any(), "atlas 贴图要挂成子资源");
             Assert.IsTrue(subs.OfType<Material>().Any(), "材质要挂成子资源");
             Assert.AreEqual(AtlasPopulationMode.Dynamic, fa.atlasPopulationMode);
@@ -56,6 +56,15 @@ namespace Seedance.UiImport.Tests
             var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(a));
             var b = FontResolver.Resolve(null, TestPaths.RequireCachedFont(), TestPaths.OutDir);
             Assert.AreEqual(guid, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(b)));
+        }
+
+        [Test]
+        public void Resolve_ReusesFontGeneratedByAnotherImport()
+        {
+            var a = FontResolver.Resolve(null, TestPaths.RequireCachedFont(), TestPaths.OutDir + "/A");
+            var b = FontResolver.Resolve(null, TestPaths.RequireCachedFont(), TestPaths.OutDir + "/B");
+            Assert.AreEqual(AssetDatabase.GetAssetPath(a), AssetDatabase.GetAssetPath(b));
+            Assert.IsFalse(Directory.Exists(TestPaths.OutDir + "/B/Fonts"), "同一个字体不能每个导入目录各拷一份");
         }
 
         [Test]
