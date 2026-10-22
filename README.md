@@ -3,7 +3,7 @@
 ## 目标
 
 - [ ] 通过 Unity CLI 测试场景性能指标，并分析出原因
-- [ ] 通过 Unity CLI 直接创建 UI 界面
+- [x] 通过 Unity CLI 直接创建 UI 界面（skill：`.claude/skills/seedance-ui-to-unity/`）
 - [ ] 通过 Unreal 命令行测试关卡性能指标，并分析出原因
 - [ ] 通过 Unreal 命令行直接创建 UI 界面（UMG）
 
@@ -23,6 +23,8 @@ Seedance 美术管线：UI 整体切图
 2. **导出**：切图资源，以及描述界面层级结构的 JSON
 3. **本 agent**：读取切图与 JSON，通过 Unity CLI 驱动 Editor
 4. **Unity**：自动导入，生成场景或 Prefab
+
+实现：skill `seedance-ui-to-unity`（`.claude/skills/seedance-ui-to-unity/SKILL.md`），对 Claude 说「把这份 ui-maker 产物导入 Unity 工程 X」即可。设计见 `docs/superpowers/specs/2026-10-21-seedance-ui-to-unity-design.md`，开发 / 测试工程在 `unity/SeedanceUiDev/`（跑测试：`bash unity/SeedanceUiDev/run-tests.sh`，先关掉该工程的 Editor）。
 
 ## 可用 Unity Editor 工具 —— 160 个
 
