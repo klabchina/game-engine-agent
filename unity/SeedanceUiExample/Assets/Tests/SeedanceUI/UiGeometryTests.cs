@@ -25,6 +25,38 @@ namespace Seedance.UiImport.Tests
         }
 
         [Test]
+        public void PlaceCentered_OffsetFromCanvasCenter()
+        {
+            // 2560x1440 画布中心 (1280,720)；面板中心 (254+1028, 143+578) = (1282, 721)
+            var p = UiGeometry.PlaceCentered(R(254, 143, 2056, 1156), 2560, 1440);
+            Assert.AreEqual(new Vector2(2, -1), p.anchoredPosition);
+            Assert.AreEqual(new Vector2(2056, 1156), p.size);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), p.anchor);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), p.pivot);
+        }
+
+        [Test]
+        public void PlaceCentered_OddSizeKeepsHalfPixel()
+        {
+            var p = UiGeometry.PlaceCentered(R(637, 142, 1303, 1126), 2560, 1440);
+            Assert.AreEqual(new Vector2(8.5f, 15f), p.anchoredPosition);
+        }
+
+        [Test]
+        public void Apply_Centered()
+        {
+            var go = new GameObject("n", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            UiGeometry.Apply(rt, UiGeometry.PlaceCentered(R(254, 143, 2056, 1156), 2560, 1440));
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), rt.anchorMin);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), rt.anchorMax);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), rt.pivot);
+            Assert.AreEqual(new Vector2(2, -1), rt.anchoredPosition);
+            Assert.AreEqual(new Vector2(2056, 1156), rt.sizeDelta);
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
         public void Match_LandscapeIsZero() => Assert.AreEqual(0f, UiGeometry.MatchFor(2560, 1440));
 
         [Test]

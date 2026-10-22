@@ -107,7 +107,7 @@ namespace Seedance.UiImport.Editor
                 var recorded = RecordedParent(marker, root, nodes);
                 if (recorded == null || actual != recorded)
                 {
-                    // 程序挪走的：位置不动，尺寸照样更新（pivot 在左上，左上角不会跑）——上游每次重出切图留边都不同
+                    // 程序挪走的：位置不动，尺寸照样更新（围着 pivot 变）——上游每次重出切图留边都不同
                     ((RectTransform)node.transform).sizeDelta = UiGeometry.Place(e.EffectiveRect, null).size;
                     report.moved.Add(ImportReport.Label(e));
                     return;
@@ -182,8 +182,13 @@ namespace Seedance.UiImport.Editor
             return prefab;
         }
 
-        static void Place(UiLayoutDoc doc, UiLayoutElement e, RectTransform rt) =>
-            UiGeometry.Apply(rt, UiGeometry.Place(e.EffectiveRect, doc.Find(e.parent)?.EffectiveRect));
+        static void Place(UiLayoutDoc doc, UiLayoutElement e, RectTransform rt)
+        {
+            var parent = doc.Find(e.parent);
+            UiGeometry.Apply(rt, parent == null
+                ? UiGeometry.PlaceCentered(e.EffectiveRect, doc.resolution.width, doc.resolution.height)
+                : UiGeometry.Place(e.EffectiveRect, parent.EffectiveRect));
+        }
 
         /// <summary>首次建节点：名字、标记、按类型挂组件。之后这些都归程序，重导不再碰</summary>
         internal static GameObject CreateNode(UiLayoutElement e, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,

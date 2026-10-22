@@ -39,6 +39,22 @@ namespace Seedance.UiImport.Tests
         }
 
         [Test]
+        public void Update_RecentersOldTopLeftPanel()
+        {
+            // 旧版导入出来的面板锚在左上：重导后改成相对根居中
+            EditPrefab(r =>
+            {
+                var rt = (RectTransform)Node(r, "panel_e1").transform;
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 1);
+                rt.anchoredPosition = new Vector2(254, -143);
+            });
+            var (p, _) = Build();
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), Rt(p, "panel_e1").anchorMin);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), Rt(p, "panel_e1").pivot);
+            Assert.AreEqual(new Vector2(2, -1), Rt(p, "panel_e1").anchoredPosition);
+        }
+
+        [Test]
         public void Update_RestoresSpriteFromLayout()
         {
             EditPrefab(r => Node(r, "button_e2").GetComponent<Image>().sprite = null);

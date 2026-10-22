@@ -9,6 +9,7 @@ description: Use when importing a Seedance ui-maker UI (the layout.json + slices
 
 ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# 包 `SeedanceUI` 解析成 UGUI Prefab。本 skill 负责：把包推进目标工程 → 在运行中的 Editor 里调一次 `unity command seedance ui_import` → 离屏截图与 `preview.png` 对照 → 汇报。
 
+- 直接挂在 Prefab 根下的元素（通常是 `panel_e1`）锚点和 pivot 在中心，相对父级居中；其余元素锚在各自父元素的左上角。
 - 节点、Sprite 一律 ASCII 命名（`button_e7`、`slot_e2.png`），中文名存在节点的 `SeedanceUiElement.sourceName`。
 - 重导只更新 **Sprite、位置、尺寸**；文字、同级顺序、已有组件、显隐归程序，不碰。父节点只在程序没挪过时跟着上游改。产物里没了的元素设 inactive，不删。
 - 同一个字体在工程里只生成一份 TMP 字体资产，后导入的 UI 共用它。

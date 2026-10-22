@@ -40,7 +40,11 @@ namespace Seedance.UiImport.Tests
         public void Build_Positions()
         {
             var (p, _) = Build();
-            Assert.AreEqual(new Vector2(254, -143), Rt(p, "panel_e1").anchoredPosition);
+            // 根下的元素相对 Prefab 根居中
+            Assert.AreEqual(new Vector2(2, -1), Rt(p, "panel_e1").anchoredPosition);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), Rt(p, "panel_e1").anchorMin);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), Rt(p, "panel_e1").anchorMax);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), Rt(p, "panel_e1").pivot);
             Assert.AreEqual(new Vector2(1959, 9), Rt(p, "button_e2").anchoredPosition);
             Assert.AreEqual(new Vector2(105, 106), Rt(p, "button_e2").sizeDelta);
             Assert.AreEqual(new Vector2(776, -27), Rt(p, "text_e3").anchoredPosition);
