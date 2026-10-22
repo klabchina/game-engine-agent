@@ -1,0 +1,12 @@
+{
+    "name": "Seedance.UiImport.Editor",
+    "rootNamespace": "Seedance.UiImport.Editor",
+    "references": [
+        "Seedance.UiImport.Runtime",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
+        "Unity.TextMeshPro.Editor"
+    ],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
+}

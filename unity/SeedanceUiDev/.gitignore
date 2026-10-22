@@ -1,0 +1,12 @@
+Library/
+Temp/
+Logs/
+obj/
+UserSettings/
+Build/
+*.csproj
+*.sln
+test-results.xml
+# 由 .claude/skills/seedance-ui-to-unity/scripts/install_package.sh 生成，源码在 skill 目录
+Assets/SeedanceUI/
+Assets/SeedanceUI.meta
