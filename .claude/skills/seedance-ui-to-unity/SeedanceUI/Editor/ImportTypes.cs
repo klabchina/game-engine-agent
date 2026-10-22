@@ -18,4 +18,29 @@ namespace Seedance.UiImport.Editor
         public List<string> orphanSprites = new List<string>();
         public List<string> warnings = new List<string>();
     }
+
+    /// <summary>一次导入的结果。列表项是 "&lt;id&gt; &lt;ui-maker 里的名字&gt;"，如 "e3 角色属性"</summary>
+    [Serializable]
+    public class ImportReport
+    {
+        public string prefabPath;
+        public string scenePath;
+        /// <summary>本次新建的节点</summary>
+        public List<string> created = new List<string>();
+        /// <summary>重导时更新了 Sprite / 位置 / 尺寸的节点</summary>
+        public List<string> updated = new List<string>();
+        /// <summary>产物里已经没有、被设为 inactive 的节点</summary>
+        public List<string> deactivated = new List<string>();
+        /// <summary>上游没出图的元素（只建了占位节点）</summary>
+        public List<string> missing = new List<string>();
+        /// <summary>类型和首次导入时不同的元素（组件没改）</summary>
+        public List<string> typeChanged = new List<string>();
+        /// <summary>被程序挪到别的父节点下、没更新位置的节点</summary>
+        public List<string> moved = new List<string>();
+        /// <summary>Sprites/ 下本次没用到的图（没删）</summary>
+        public List<string> orphanSprites = new List<string>();
+        public List<string> warnings = new List<string>();
+
+        public static string Label(UiLayoutElement e) => $"{e.id} {e.name}";
+    }
 }
