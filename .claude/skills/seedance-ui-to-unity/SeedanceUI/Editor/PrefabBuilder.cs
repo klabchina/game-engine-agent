@@ -16,7 +16,91 @@ namespace Seedance.UiImport.Editor
             string prefabPath, ImportReport report)
         {
             report.prefabPath = prefabPath;
-            return Create(doc, sprites, font, prefabPath, report);
+            return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null
+                ? Update(doc, sprites, font, prefabPath, report)
+                : Create(doc, sprites, font, prefabPath, report);
+        }
+
+        /// <summary>
+        /// 重导：按 elementId 找回节点，只更新 Sprite、位置、尺寸。文字、父节点、同级顺序、组件、显隐都归程序，不碰；
+        /// 没有 SeedanceUiElement 的节点（手加的）完全不碰。
+        /// </summary>
+        static GameObject Update(UiLayoutDoc doc, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
+            string prefabPath, ImportReport report)
+        {
+            var root = PrefabUtility.LoadPrefabContents(prefabPath);
+            try
+            {
+                var nodes = new Dictionary<string, GameObject>();
+                foreach (var m in root.GetComponentsInChildren<SeedanceUiElement>(true))
+                {
+                    if (string.IsNullOrEmpty(m.elementId) || nodes.ContainsKey(m.elementId))
+                    {
+                        report.warnings.Add($"节点 {m.name} 的 elementId「{m.elementId}」为空或重复，跳过");
+                        continue;
+                    }
+                    nodes[m.elementId] = m.gameObject;
+                }
+                var docIds = new HashSet<string>();
+                foreach (var e in doc.elements) docIds.Add(e.id);
+
+                var added = new List<UiLayoutElement>();
+                foreach (var e in doc.elements)
+                {
+                    if (nodes.ContainsKey(e.id)) continue;
+                    nodes[e.id] = CreateNode(e, sprites, font, report);
+                    added.Add(e);
+                }
+                foreach (var e in added)
+                {
+                    var parent = e.parent != null ? nodes[e.parent].transform : root.transform;
+                    nodes[e.id].transform.SetParent(parent, false);
+                    nodes[e.id].transform.SetAsLastSibling();
+                    Place(doc, e, (RectTransform)nodes[e.id].transform);
+                }
+
+                foreach (var e in doc.elements)
+                {
+                    if (added.Contains(e)) continue;
+                    UpdateNode(doc, e, nodes[e.id], e.parent != null ? nodes[e.parent].transform : root.transform, sprites, report);
+                }
+
+                foreach (var kv in nodes)
+                {
+                    if (docIds.Contains(kv.Key)) continue;
+                    kv.Value.SetActive(false);
+                    var m = kv.Value.GetComponent<SeedanceUiElement>();
+                    report.deactivated.Add($"{m.elementId} {m.sourceName}");
+                }
+                return Save(root, prefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        static void UpdateNode(UiLayoutDoc doc, UiLayoutElement e, GameObject node, Transform layoutParent,
+            IReadOnlyDictionary<string, Sprite> sprites, ImportReport report)
+        {
+            var marker = node.GetComponent<SeedanceUiElement>();
+            if (marker.type != e.type)
+            {
+                report.typeChanged.Add(ImportReport.Label(e));
+                report.warnings.Add($"{ImportReport.Label(e)}：类型从 {marker.type} 变成了 {e.type}，组件没改，需要的话手动调整");
+            }
+            if (e.missing) report.missing.Add(ImportReport.Label(e));
+
+            var img = node.GetComponent<Image>();
+            if (img != null && sprites.TryGetValue(e.id, out var sprite)) img.sprite = sprite;
+
+            if (node.transform.parent != layoutParent)
+            {
+                report.moved.Add(ImportReport.Label(e));
+                return;
+            }
+            Place(doc, e, (RectTransform)node.transform);
+            report.updated.Add(ImportReport.Label(e));
         }
 
         static GameObject Create(UiLayoutDoc doc, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
