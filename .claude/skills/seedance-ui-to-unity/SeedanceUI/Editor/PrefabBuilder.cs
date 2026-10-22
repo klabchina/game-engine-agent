@@ -235,13 +235,21 @@ namespace Seedance.UiImport.Editor
             }
         }
 
+        const float DefaultFontSize = 36f;
+
         static void AddText(GameObject go, UiLayoutElement e, TMP_FontAsset font, ImportReport report)
         {
             var t = go.AddComponent<TextMeshProUGUI>();
             var s = e.text;
             if (font != null) t.font = font;
             t.text = s?.content ?? "";
-            t.fontSize = s?.fontSize ?? 36;
+            if (s != null && s.fontSize > 0) t.fontSize = s.fontSize;
+            else
+            {
+                // JsonUtility 把缺失的 text 读成默认实例，字号是 0，文字会看不见
+                t.fontSize = DefaultFontSize;
+                report.warnings.Add($"{ImportReport.Label(e)}：没有字号，用了 {DefaultFontSize}");
+            }
             if (s != null && ColorUtility.TryParseHtmlString(s.color, out var c)) t.color = c;
             else
             {

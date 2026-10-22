@@ -69,6 +69,7 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
 ## 出错时
 
 - 照 unity-cli skill 的规则：超时、Editor 进 Safe Mode（`unity pipeline list` 的 Safe Mode 列）、连不上，如实报告做了什么、失败在哪，**不要**循环重试、换别的 Editor、或手改 `.prefab` / `.meta` / `.unity` 文本。
+- 报「Editor 正处于 Play Mode」：请用户退出 Play Mode（或 `unity command editor.playmode stop`，先问用户）后重跑；这时什么都还没写进工程。
 - `ui_import` 抛的中文错误消息就是给用户看的（路径不对、Prefab 名非 ASCII、缺字体、layout.json 不合法），原样转述并问怎么改。
 - 编译错误：看 `unity recompile --project-path "$PROJECT"` 的输出；`Assets/SeedanceUI/` 由本 skill 管理，别在工程里改它，改 `$SKILL_DIR/SeedanceUI/` 再推包。
 

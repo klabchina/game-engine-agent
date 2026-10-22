@@ -1,6 +1,7 @@
 // 文字元素用的 TMP 字体：传了现成的 TMP Font Asset 就用它；
 // 否则把字体文件拷进 <importDir>/Fonts/，生成一份动态 TMP 字体（已生成过就复用）。
 
+using System;
 using System.IO;
 using TMPro;
 using UnityEditor;
@@ -65,6 +66,32 @@ namespace Seedance.UiImport.Editor
 
         /// <summary>工程里已经有 TMP Essential Resources（TMP Settings、默认 shader）</summary>
         public static bool TmpEssentialsReady() => Resources.Load<TMP_Settings>("TMP Settings") != null;
+
+        /// <summary>SessionState 键：上次触发 TMP Essential Resources 导入的时间（UTC ticks）</summary>
+        internal const string TmpImportStartedKey = "Seedance.UiImport.TmpImportStarted";
+        /// <summary>触发后超过这么久还没就绪，就当上次导入失败了，允许重新触发</summary>
+        static readonly TimeSpan TmpImportStale = TimeSpan.FromMinutes(2);
+
+        /// <summary>
+        /// seedance ui_prepare 的逻辑：已就绪返回 "ready"；否则触发导入（已触发过、还没过期就不重复触发）并返回 "importing"。
+        /// ImportPackage 是延迟执行的，调用方等 Editor 导完再调一次。
+        /// </summary>
+        public static string PrepareTmpEssentials() => PrepareTmpEssentials(TmpEssentialsReady, StartTmpEssentialsImport);
+
+        internal static string PrepareTmpEssentials(Func<bool> ready, Action startImport)
+        {
+            if (ready())
+            {
+                SessionState.EraseString(TmpImportStartedKey);
+                return "ready";
+            }
+            if (long.TryParse(SessionState.GetString(TmpImportStartedKey, ""), out var ticks)
+                && DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc) < TmpImportStale)
+                return "importing";
+            SessionState.SetString(TmpImportStartedKey, DateTime.UtcNow.Ticks.ToString());
+            startImport();
+            return "importing";
+        }
 
         /// <summary>
         /// 开始导入 TMP Essential Resources。AssetDatabase.ImportPackage 是延迟执行的——调用返回后 Editor 才真正导入，

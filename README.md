@@ -24,7 +24,7 @@ Seedance 美术管线：UI 整体切图
 3. **本 agent**：读取切图与 JSON，通过 Unity CLI 驱动 Editor
 4. **Unity**：自动导入，生成场景或 Prefab
 
-实现：skill `seedance-ui-to-unity`（`.claude/skills/seedance-ui-to-unity/SKILL.md`），对 Claude 说「把这份 ui-maker 产物导入 Unity 工程 X」即可。设计见 `docs/superpowers/specs/2026-10-21-seedance-ui-to-unity-design.md`，开发 / 测试工程在 `unity/SeedanceUiDev/`（跑测试：`bash unity/SeedanceUiDev/run-tests.sh`，先关掉该工程的 Editor）。
+实现：skill `seedance-ui-to-unity`（`.claude/skills/seedance-ui-to-unity/SKILL.md`），对 Claude 说「把这份 ui-maker 产物导入 Unity 工程 X」即可。设计见 `docs/superpowers/specs/2026-10-21-seedance-ui-to-unity-design.md`，开发 / 测试工程在 `unity/SeedanceUiExample/`（跑测试：`bash unity/SeedanceUiExample/run-tests.sh`，先关掉该工程的 Editor）。
 
 ## 可用 Unity Editor 工具 —— 160 个
 

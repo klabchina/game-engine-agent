@@ -14,12 +14,7 @@ namespace Seedance.UiImport.Editor
     {
         [CliCommand("seedance", "ui_prepare",
             "Make sure TMP Essential Resources are imported. Returns 'ready', or 'importing' (wait for the Editor to finish importing, then call again)")]
-        static string Prepare()
-        {
-            if (FontResolver.TmpEssentialsReady()) return "ready";
-            FontResolver.StartTmpEssentialsImport();
-            return "importing";
-        }
+        static string Prepare() => FontResolver.PrepareTmpEssentials();
 
         [CliCommand("seedance", "ui_import", "Import a Seedance ui-maker output (out/ dir or ui.zip) as a UGUI prefab and show it in Assets/Product/Scene/UIShowcase.unity")]
         static string Import([CliArg("request", "Absolute path to the import request JSON")] string request)

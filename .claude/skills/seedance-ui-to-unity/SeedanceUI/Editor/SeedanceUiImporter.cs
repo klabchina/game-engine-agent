@@ -1,5 +1,6 @@
 // 一次导入的完整流程：读产物 → 切图成 Sprite → 字体 → 建 / 更新 Prefab → 放进展示场景。
 
+using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -8,8 +9,14 @@ namespace Seedance.UiImport.Editor
 {
     public static class SeedanceUiImporter
     {
+        internal static readonly Func<bool> DefaultIsPlaying = () => EditorApplication.isPlayingOrWillChangePlaymode;
+        /// <summary>测试替换用</summary>
+        internal static Func<bool> IsPlaying = DefaultIsPlaying;
+
         public static ImportReport Run(ImportRequest req)
         {
+            // Play Mode 下改 Prefab / 打开场景会失败或被还原，而切图已经写进去了——一开始就拒绝
+            if (IsPlaying()) throw new UiImportException("Editor 正处于 Play Mode，先退出 Play Mode 再导入");
             var importDir = (req.importDir ?? "").Replace('\\', '/').TrimEnd('/');
             if (!importDir.StartsWith("Assets/"))
                 throw new UiImportException($"导入目录必须在 Assets/ 下：{req.importDir}");
