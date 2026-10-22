@@ -36,7 +36,9 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
 3. **Editor**：看 `unity status --format json` 里有没有 `project` 等于 `$PROJECT` 的实例。
    - 没有：`unity open "$PROJECT"`，再 `unity status --until-ready --project-path "$PROJECT"`。刚打开的 Editor 会自己编译，**不要**马上 `recompile`（会返回 503 Server Busy）。
    - 已经开着：`unity recompile --project-path "$PROJECT"`，让它编译刚推进去的包。
-   - 最后确认 `unity list --project-path "$PROJECT"` 里有 `ui_import`（分组 `seedance`）；没有就再 `unity status --until-ready` 后重查一次。
+   - 最后看 `unity list --project-path "$PROJECT"` 定命令写法（没有就再 `unity status --until-ready` 后重查一次）：
+     - 有 `ui_import`（分组 `seedance`，pipeline ≥ 0.9）：下文写法照用。
+     - 有 `seedance_ui_import`（pipeline 0.8 不支持分组）：下文的 `command seedance ui_xxx` 一律换成 `command seedance_ui_xxx`。
 4. **TMP 基础资源**：
    ```bash
    unity --no-banner command seedance ui_prepare --project-path "$PROJECT" --result-only
