@@ -10,6 +10,22 @@ namespace Seedance.UiImport.Editor
         public UiImportException(string message) : base(message) { }
     }
 
+    /// <summary>seedance_ui_import 的请求（skill 写成 JSON 文件传进来）</summary>
+    [Serializable]
+    public class ImportRequest
+    {
+        /// <summary>ui-maker 任务的 out/ 目录或 ui.zip，绝对路径</summary>
+        public string source;
+        /// <summary>工程内导入目录，必须以 Assets/ 开头</summary>
+        public string importDir;
+        /// <summary>可选，ASCII；为空取 importDir 最后一级</summary>
+        public string prefabName;
+        /// <summary>可选，工程里现成的 TMP Font Asset 路径</summary>
+        public string tmpFont;
+        /// <summary>可选，没给 tmpFont 时用来生成动态 TMP 字体的字体文件（绝对路径）</summary>
+        public string fontFile;
+    }
+
     public class SpriteWriteResult
     {
         /// <summary>元素 id → Sprite。text 元素、missing 元素不在里面</summary>
