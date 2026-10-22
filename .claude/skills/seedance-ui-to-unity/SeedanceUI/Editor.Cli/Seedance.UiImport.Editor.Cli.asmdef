@@ -1,0 +1,24 @@
+{
+    "name": "Seedance.UiImport.Editor.Cli",
+    "rootNamespace": "Seedance.UiImport.Editor",
+    "references": [
+        "Seedance.UiImport.Runtime",
+        "Seedance.UiImport.Editor",
+        "Unity.Pipeline.Attributes"
+    ],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false,
+    "defineConstraints": ["SEEDANCE_HAS_PIPELINE"],
+    "versionDefines": [
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.0.1-0",
+            "define": "SEEDANCE_HAS_PIPELINE"
+        },
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.9.0-0",
+            "define": "SEEDANCE_PIPELINE_GROUPS"
+        }
+    ]
+}

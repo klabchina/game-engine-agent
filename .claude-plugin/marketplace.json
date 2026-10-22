@@ -1,0 +1,32 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "game-engine-agent",
+  "owner": {
+    "name": "klabchina"
+  },
+  "metadata": {
+    "description": "用 Claude 驱动游戏引擎（Unity / Unreal）的 skill 集合",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "seedance-ui-to-unity",
+      "description": "把 Seedance ui-maker 的 UI 产物（out/ 目录或 ui.zip）通过 Unity CLI 导入 Unity 工程，生成 UGUI Prefab；重导只更新图片与位置",
+      "version": "1.0.0",
+      "source": "./.claude/skills/seedance-ui-to-unity",
+      "strict": false,
+      "skills": [
+        "./"
+      ],
+      "category": "development",
+      "keywords": [
+        "unity",
+        "ugui",
+        "prefab",
+        "seedance",
+        "ui-maker",
+        "unity-cli"
+      ]
+    }
+  ]
+}
