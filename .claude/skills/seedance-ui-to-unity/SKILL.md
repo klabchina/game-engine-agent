@@ -88,6 +88,8 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
 - `ui_import` 抛的中文错误消息就是给用户看的（路径不对、Prefab 名非 ASCII、缺字体、layout.json 不合法），原样转述并问怎么改。
 - 编译错误：看 `unity recompile --project-path "$PROJECT"` 的输出；`Assets/SeedanceUiImporter/` 是临时目录，别在工程里改它，改 `$SKILL_DIR/SeedanceUiImporter/` 再推包。
 - 「找不到它的导入记录」「导入记录损坏」「多份导入记录指向同一个 Prefab」：原样转述。能从版本库恢复记录最好；否则删掉那个 Prefab 再导入会按首次导入重建，**手加的内容会丢**，先问用户。这类错误发生时工程里什么都还没写。
+- 「导入记录是只读的」：多半是版本管理（如 Perforce）没 checkout，请用户 checkout 那份记录后重跑；这时什么都还没写。
+- 「Prefab 已保存，但导入记录没写成」：**不要直接重导**（会把新节点再建一份）。照报错排除原因后，从版本库恢复 Prefab 再导。
 
 ## Common Mistakes
 

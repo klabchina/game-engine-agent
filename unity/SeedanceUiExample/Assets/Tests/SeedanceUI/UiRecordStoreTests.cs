@@ -155,6 +155,26 @@ namespace Seedance.UiImport.Tests
         }
 
         [Test]
+        public void Save_CaseOnlyRename_KeepsRecord()
+        {
+            var guid = MakePrefab("bag");
+            UiRecordStore.Save(PrefabPath("bag"), Sample(guid), null);
+            // 程序只改了 Prefab 名的大小写（bag → Bag），重导时按 GUID 找到旧记录再搬过去
+            UiRecordStore.Save(PrefabPath("Bag"), Sample(guid), UiRecordStore.RecordPathFor(PrefabPath("bag")));
+            Assert.IsNotNull(UiRecordStore.FindByGuid(guid, PrefabPath("Bag"), out var at), "记录不能被当成旧文件删掉");
+            StringAssert.EndsWith("/Bag.json", at);
+        }
+
+        [Test]
+        public void ValidateAll_DuplicateGuid_Throws()
+        {
+            var guid = MakePrefab("A");
+            WriteRaw(UiRecordStore.RecordPathFor(PrefabPath("X")), JsonUtility.ToJson(Sample(guid)));
+            WriteRaw(UiRecordStore.RecordPathFor(PrefabPath("Y")), JsonUtility.ToJson(Sample(guid)));
+            Assert.Throws<UiImportException>(UiRecordStore.ValidateAll);
+        }
+
+        [Test]
         public void ReleaseMirrorPath_StaleRecord_LeftForOverwrite()
         {
             var path = UiRecordStore.RecordPathFor(PrefabPath("X"));

@@ -23,12 +23,15 @@ namespace Seedance.UiImport.Editor
         }
 
         /// <summary>
-        /// Prefab 已存在时确认它的导入记录读得出来，否则抛 UiImportException。导入流程在写任何文件之前调用，
-        /// 保证记录有问题时工程里什么都不变。Prefab 不存在（首次导入）什么都不做。
+        /// 导入流程在写任何文件之前调用：所有记录都读得出来、没有重复；Prefab 已存在时它要有记录，且记录可写。
+        /// 否则抛 UiImportException，保证记录有问题时工程里什么都不变。
         /// </summary>
         public static void EnsureRecordReadable(string prefabPath)
         {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null) RequireRecord(prefabPath, out _);
+            UiRecordStore.ValidateAll();
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) == null) return;
+            RequireRecord(prefabPath, out var recordPath);
+            UiRecordStore.EnsureWritable(prefabPath, recordPath);
         }
 
         static UiRecord RequireRecord(string prefabPath, out string recordPath)
@@ -98,6 +101,7 @@ namespace Seedance.UiImport.Editor
                     kv.Value.SetActive(false);
                     report.deactivated.Add($"{kv.Key} {entries[kv.Key].sourceName}");
                 }
+                UiRecordStore.EnsureWritable(prefabPath, recordPath);
                 var saved = Save(root, prefabPath);
                 SaveRecord(doc, prefabPath, saved, root, nodes, entries, recordPath);
                 return saved;
@@ -186,6 +190,7 @@ namespace Seedance.UiImport.Editor
                     nodes[e.id].transform.SetAsLastSibling();
                     Place(doc, e, (RectTransform)nodes[e.id].transform);
                 }
+                UiRecordStore.EnsureWritable(prefabPath, null);
                 var saved = Save(root, prefabPath);
                 SaveRecord(doc, prefabPath, saved, root, nodes, entries, null);
                 return saved;
@@ -218,7 +223,15 @@ namespace Seedance.UiImport.Editor
                 entry.fileId = fileId;
                 record.elements.Add(entry);
             }
-            UiRecordStore.Save(prefabPath, record, previousRecordPath);
+            try
+            {
+                UiRecordStore.Save(prefabPath, record, previousRecordPath);
+            }
+            catch (System.Exception ex) when (!(ex is UiImportException))
+            {
+                throw new UiImportException($"Prefab 已保存，但导入记录没写成：{UiRecordStore.RecordPathFor(prefabPath)}（{ex.Message}）。" +
+                                            "先排除原因（只读、磁盘满等），再从版本库恢复这个 Prefab 后重导；直接重导会把这次新建的节点再建一份");
+            }
         }
 
         static GameObject Save(GameObject root, string prefabPath)

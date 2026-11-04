@@ -2,6 +2,7 @@
 # 把 SeedanceUiImporter 包源码同步到（有 rsync 用 rsync，没有就用 cp + find） Unity 工程的 Assets/SeedanceUiImporter/（含固定 GUID 的 .meta）。
 # 这是临时目录：导入流程结束后由 uninstall_package.sh 删掉。Assets/SeedanceUI/ 存的是导入记录，这里不碰，
 # 只清掉旧版装在 Assets/SeedanceUI/ 下的 SDK（Editor/、Editor.Cli/、Runtime/），否则会和新包的程序集重名。
+# 认旧 SDK 只看目录里有没有它的 asmdef：Prefab 在 Assets/Runtime/ 等目录下时，记录也会镜像到 Assets/SeedanceUI/Runtime/，不能误删。
 # 用法：install_package.sh <unity 工程路径>
 set -euo pipefail
 project="${1:-}"
@@ -12,7 +13,9 @@ fi
 src="$(cd "$(dirname "$0")/.." && pwd)/SeedanceUiImporter/"
 dst="$project/Assets/SeedanceUiImporter"
 for d in Editor Editor.Cli Runtime; do
-  rm -rf "$project/Assets/SeedanceUI/$d" "$project/Assets/SeedanceUI/$d.meta"
+  if [ -f "$project/Assets/SeedanceUI/$d/Seedance.UiImport.$d.asmdef" ]; then
+    rm -rf "$project/Assets/SeedanceUI/$d" "$project/Assets/SeedanceUI/$d.meta"
+  fi
 done
 if command -v rsync >/dev/null 2>&1; then
   rsync -a --delete "$src" "$dst/"

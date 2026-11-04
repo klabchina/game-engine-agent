@@ -108,6 +108,18 @@ namespace Seedance.UiImport.Tests
         }
 
         [Test]
+        public void Run_FirstImport_BrokenRecordElsewhere_WritesNothing()
+        {
+            var broken = TestPaths.RecordOutDir + "/Other.json";
+            System.IO.Directory.CreateDirectory(TestPaths.RecordOutDir);
+            System.IO.File.WriteAllText(broken, "{x");
+            var ex = Assert.Throws<UiImportException>(() => SeedanceUiImporter.Run(Req()));
+            StringAssert.Contains(broken, ex.Message);
+            Assert.IsFalse(System.IO.File.Exists(ExpectedPrefab), "坏记录要在写任何东西之前报出来");
+            Assert.IsFalse(System.IO.Directory.Exists(TestPaths.OutDir + "/CharacterPanel/Sprites"));
+        }
+
+        [Test]
         public void RequestJson_RoundTrip()
         {
             var req = JsonUtility.FromJson<ImportRequest>("{\"source\":\"/a/ui.zip\",\"importDir\":\"Assets/UI/A\",\"tmpFont\":\"Assets/F.asset\"}");

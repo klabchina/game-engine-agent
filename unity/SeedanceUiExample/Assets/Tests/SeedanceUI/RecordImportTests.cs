@@ -107,6 +107,22 @@ namespace Seedance.UiImport.Tests
         }
 
         [Test]
+        public void Update_ReadOnlyRecord_ThrowsBeforeSavingPrefab()
+        {
+            var bytes = File.ReadAllBytes(PrefabPath);
+            File.SetAttributes(RecordPath, FileAttributes.ReadOnly);
+            try
+            {
+                var doc = Doc();
+                doc.Find("e2").rect.x += 10;
+                var ex = Assert.Throws<UiImportException>(() => Build(doc));
+                StringAssert.Contains("只读", ex.Message);
+                CollectionAssert.AreEqual(bytes, File.ReadAllBytes(PrefabPath), "记录写不了时 Prefab 不能先存进去");
+            }
+            finally { File.SetAttributes(RecordPath, FileAttributes.Normal); }
+        }
+
+        [Test]
         public void Create_AfterMovingOldPrefab_KeepsOldRecord()
         {
             var old = TestPaths.OutDir + "/Old.prefab";

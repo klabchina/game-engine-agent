@@ -50,13 +50,20 @@ namespace Seedance.UiImport.Editor
         public static void Save(string prefabPath, UiRecord record, string previousPath)
         {
             var path = RecordPathFor(prefabPath);
+            var hasPrevious = !string.IsNullOrEmpty(previousPath) && Normalize(previousPath) != path;
+            // 只差大小写（程序把 bag.prefab 改成 Bag.prefab）：大小写不敏感的文件系统上是同一个文件，先删旧的再写，不能写完再删
+            if (hasPrevious && string.Equals(Normalize(previousPath), path, StringComparison.OrdinalIgnoreCase))
+            {
+                Delete(previousPath);
+                hasPrevious = false;
+            }
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             var tmp = path + ".tmp";
             File.WriteAllText(tmp, JsonUtility.ToJson(record, true));
             if (File.Exists(path)) File.Replace(tmp, path, null);
             else File.Move(tmp, path);
             AssetDatabase.ImportAsset(path);
-            if (!string.IsNullOrEmpty(previousPath) && Normalize(previousPath) != path) Delete(previousPath);
+            if (hasPrevious) Delete(previousPath);
         }
 
         /// <summary>导入时的设计分辨率（离屏截图用）。Prefab 没有导入记录抛 UiImportException</summary>
@@ -78,8 +85,39 @@ namespace Seedance.UiImport.Editor
             if (!File.Exists(path)) return;
             var r = Read(path);
             var owner = AssetDatabase.GUIDToAssetPath(r.prefabGuid);
-            if (string.IsNullOrEmpty(owner) || !File.Exists(owner) || Normalize(owner) == Normalize(prefabPath)) return;
+            if (string.IsNullOrEmpty(owner) || !File.Exists(owner) ||
+                string.Equals(Normalize(owner), Normalize(prefabPath), StringComparison.OrdinalIgnoreCase)) return;
             Save(owner, r, path);
+        }
+
+        /// <summary>
+        /// 把所有记录读一遍：任何一份解析不了、或多份指向同一个 Prefab 都抛 UiImportException。
+        /// 导入在写任何文件之前调用，免得写到一半（展示场景里扫记录时）才报出来。
+        /// </summary>
+        public static void ValidateAll()
+        {
+            var owners = new Dictionary<string, string>();
+            foreach (var path in AllRecordPaths())
+            {
+                var r = Read(path);
+                if (owners.TryGetValue(r.prefabGuid, out var other))
+                    throw new UiImportException($"有多份导入记录指向同一个 Prefab（{AssetDatabase.GUIDToAssetPath(r.prefabGuid)}）：{other}、{path}。只保留正确的那份再导入");
+                owners[r.prefabGuid] = path;
+            }
+        }
+
+        /// <summary>
+        /// 保存 Prefab 之前调用：本次要写 / 要删的记录文件只要有只读的（版本管理没 checkout 等）就抛 UiImportException。
+        /// 不然 Prefab 存进去了而记录没跟上，下次重导会把新节点当成手加的、再建一份。
+        /// </summary>
+        public static void EnsureWritable(string prefabPath, string previousPath)
+        {
+            foreach (var p in new[] { RecordPathFor(prefabPath), previousPath })
+            {
+                if (string.IsNullOrEmpty(p) || !File.Exists(p)) continue;
+                if ((File.GetAttributes(p) & FileAttributes.ReadOnly) != 0)
+                    throw new UiImportException($"导入记录是只读的（可能需要先在版本管理里 checkout）：{p}。这次什么都还没写");
+            }
         }
 
         static IEnumerable<string> AllRecordPaths() =>
