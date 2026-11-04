@@ -7,6 +7,8 @@ set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 skill="$here/../../../.claude/skills/seedance-ui-to-unity"
 src="$skill/SeedanceUiImporter"
+mskill="$here/../../../.claude/skills/seedance-3dmodel-to-unity"
+msrc="$mskill/SeedanceModelImporter"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 fail=0
@@ -65,6 +67,27 @@ check() { # $1 = 名字，$2 = PATH
   done
   if [ -e "$proj/Assets/SeedanceUiImporter" ] || [ -e "$proj/Assets/SeedanceUiImporter.meta" ]; then echo "FAIL $1: uninstall 没删干净"; fail=1; return; fi
   if [ ! -f "$proj/Assets/SeedanceUI/UI/A.json" ]; then echo "FAIL $1: uninstall 删了记录文件"; fail=1; return; fi
+
+  # 模型包：和 UI 包同时推进同一个工程，各自完整；删模型包不碰 UI 包和模型记录
+  local both="$tmp/$1-both"
+  mkdir -p "$both/Assets/SeedanceModel"
+  echo '{}' > "$both/Assets/SeedanceModel/X.json"
+  for s in "$skill" "$mskill"; do
+    if ! PATH="$2" bash "$s/scripts/install_package.sh" "$both" >/dev/null 2>"$tmp/$1.err"; then
+      echo "FAIL $1: install（$(basename "$s")）退出非 0：$(cat "$tmp/$1.err")"; fail=1; return
+    fi
+  done
+  if ! diff -r "$src" "$both/Assets/SeedanceUiImporter" >/dev/null; then echo "FAIL $1: 两包共存时 UI 包内容不对"; fail=1; return; fi
+  if ! diff -r "$msrc" "$both/Assets/SeedanceModelImporter" >/dev/null; then echo "FAIL $1: 模型包内容和源码不一致"; fail=1; return; fi
+  if ! cmp -s "$mskill/SeedanceModelImporter.meta" "$both/Assets/SeedanceModelImporter.meta"; then echo "FAIL $1: 模型包根目录 meta 不对"; fail=1; return; fi
+  for i in 1 2; do
+    if ! PATH="$2" bash "$mskill/scripts/uninstall_package.sh" "$both" >/dev/null 2>"$tmp/$1.err"; then
+      echo "FAIL $1: 第 $i 次模型包 uninstall 退出非 0：$(cat "$tmp/$1.err")"; fail=1; return
+    fi
+  done
+  if [ -e "$both/Assets/SeedanceModelImporter" ] || [ -e "$both/Assets/SeedanceModelImporter.meta" ]; then echo "FAIL $1: 模型包 uninstall 没删干净"; fail=1; return; fi
+  if [ ! -d "$both/Assets/SeedanceUiImporter" ]; then echo "FAIL $1: 删模型包把 UI 包删了"; fail=1; return; fi
+  if [ ! -f "$both/Assets/SeedanceModel/X.json" ]; then echo "FAIL $1: 删模型包把模型记录删了"; fail=1; return; fi
   echo "ok $1"
 }
 

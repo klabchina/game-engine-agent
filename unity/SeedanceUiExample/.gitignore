@@ -17,3 +17,8 @@ Assets/Product/
 Assets/Product.meta
 Assets/SeedanceUI/
 Assets/SeedanceUI.meta
+# 由 .claude/skills/seedance-3dmodel-to-unity/scripts/install_package.sh 生成；模型导入记录同理只对应手动产物与测试临时输出
+Assets/SeedanceModelImporter/
+Assets/SeedanceModelImporter.meta
+Assets/SeedanceModel/
+Assets/SeedanceModel.meta
