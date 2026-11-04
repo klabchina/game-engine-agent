@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""给 SeedanceUI 包源码里还没有 .meta 的文件 / 目录补一份，GUID 随机生成一次后随源码提交、永不再改。
-用法：python3 gen_meta.py <SeedanceUI 目录>"""
+"""给 SeedanceUiImporter 包源码里还没有 .meta 的文件 / 目录补一份，GUID 随机生成一次后随源码提交、永不再改。
+用法：python3 gen_meta.py <SeedanceUiImporter 目录>"""
 import sys, uuid
 from pathlib import Path
 
