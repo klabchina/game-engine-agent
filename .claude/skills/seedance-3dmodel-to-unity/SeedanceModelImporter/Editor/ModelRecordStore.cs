@@ -65,6 +65,13 @@ namespace Seedance.ModelImport.Editor
             if (hasPrevious) Delete(previousPath);
         }
 
+        /// <summary>fbxGuid 属于哪份记录（没有返回 null）。首次导入前用来发现“这份 FBX 已经归一个改了名 / 挪走的 Prefab”</summary>
+        public static ModelRecord FindByFbxGuid(string fbxGuid)
+        {
+            if (string.IsNullOrEmpty(fbxGuid)) return null;
+            return AllRecordPaths().Select(Read).FirstOrDefault(r => r.fbxGuid == fbxGuid);
+        }
+
         /// <summary>
         /// 首次导入前调用：镜像路径上已有记录、而它属于一个被挪到别处的 Prefab（还没重导过），先把记录搬到那个 Prefab 的镜像路径，
         /// 免得被这次的新记录覆盖掉。记录指向的 Prefab 已经不存在，就留着让新记录覆盖。

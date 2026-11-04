@@ -46,16 +46,27 @@ namespace Seedance.ModelImport.Editor
             File.Copy(sourceFbx, path, true);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 
+            var result = new FbxWriteResult { fbxPath = path };
             var imp = (ModelImporter)AssetImporter.GetAtPath(path);
             imp.animationType = ModelImporterAnimationType.Generic;
             imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             imp.bakeAxisConversion = true;
             imp.importAnimation = true;
+            // 先去掉上次的材质 remap：留着的话 renderer 上拿到的是外部材质（名字是 <P>），MaterialSlots 就读不到 FBX 里真正的槽名，
+            // RemapMaterials 会把真槽名的 remap 删掉、加一条不存在的——材质隔一次重导掉一次。remap 由导入流程随后重新加上
+            foreach (var id in imp.GetExternalObjectMap().Keys.Where(k => k.type == typeof(Material)).ToList())
+                imp.RemoveRemap(id);
+            var rootBone = RootBonePath(path);
             if (firstImport || string.IsNullOrEmpty(imp.motionNodeName))
-                imp.motionNodeName = RootBonePath(path);
+                imp.motionNodeName = rootBone;
+            else if (!NodeExists(path, imp.motionNodeName) && imp.motionNodeName != rootBone)
+            {
+                // 骨骼换名了（如 Tripo → 混元），旧的根运动节点在新 FBX 里没有，原地播会失效
+                result.warnings.Add($"根运动节点 {imp.motionNodeName} 在新 FBX 里没有了，已改成 {rootBone}");
+                imp.motionNodeName = rootBone;
+            }
             imp.SaveAndReimport();
 
-            var result = new FbxWriteResult { fbxPath = path };
             imp.clipAnimations = BuildClips(imp, firstImport, result.clipNames);
             imp.SaveAndReimport();
 
@@ -110,6 +121,12 @@ namespace Seedance.ModelImport.Editor
                 names.Add(name);
             }
             return clips.ToArray();
+        }
+
+        static bool NodeExists(string fbxPath, string nodePath)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            return model != null && model.transform.Find(nodePath) != null;
         }
 
         /// <summary>蒙皮根骨骼相对模型根的路径，如 "Armature/Root"；没有蒙皮网格返回空串</summary>

@@ -20,6 +20,8 @@ namespace Seedance.ModelImport.Editor
         public int formatVersion = 1;
         public string prefabGuid;
         public string fbxGuid;
+        /// <summary>导入建的 AnimatorController；重导只往这份里写</summary>
+        public string controllerGuid;
         /// <summary>"tripo" / "hunyuan" / "unknown"，只作参考</summary>
         public string source;
         /// <summary>导入生成的动画 / 状态名</summary>

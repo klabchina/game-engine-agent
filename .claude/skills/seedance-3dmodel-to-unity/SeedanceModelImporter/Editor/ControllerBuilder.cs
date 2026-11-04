@@ -1,6 +1,8 @@
 // 建 / 合并角色的 AnimatorController：Base Layer 里每段动画一个同名状态，默认状态 idle（没有就第一个），不加切换线和参数。
 // 重导时只动导入记录里登记过的状态（换 motion）和这次新出现的动画（加状态）；
 // 程序加的切换线、参数、状态、layer、默认状态都不碰。记录里有、这次 FBX 里没有的：状态留着、motion 置空、报 missingClips。
+// recordedClips 为 null（首次导入）而 Controller 已经在（例如删了 Prefab 按首次导入重建、或上次首次导入中途失败）：
+// 和动画同名的状态认作导入生成的，照常更新。
 
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +27,7 @@ namespace Seedance.ModelImport.Editor
             }
             var sm = controller.layers[0].stateMachine;
             var recorded = new HashSet<string>(recordedClips ?? new string[0]);
+            var claimSameName = recordedClips == null;
             AnimatorState State(string name) => sm.states.Select(s => s.state).FirstOrDefault(s => s.name == name);
 
             foreach (var clip in clips)
@@ -36,7 +39,7 @@ namespace Seedance.ModelImport.Editor
                     state.motion = clip;
                     report.createdStates.Add(clip.name);
                 }
-                else if (recorded.Contains(clip.name))
+                else if (recorded.Contains(clip.name) || claimSameName)
                 {
                     state.motion = clip;
                     report.updatedStates.Add(clip.name);
@@ -56,7 +59,7 @@ namespace Seedance.ModelImport.Editor
                 report.missingClips.Add(name);
             }
 
-            if (first)
+            if (first || sm.defaultState == null)
                 sm.defaultState = State("idle") ?? (clips.Count > 0 ? State(clips[0].name) : null);
 
             EditorUtility.SetDirty(controller);

@@ -153,5 +153,17 @@ namespace Seedance.ModelImport.Tests
                 finally { Object.DestroyImmediate(go); }
             }
         }
+
+        [Test]
+        public void Reimport_MotionNodeGone_Reset()
+        {
+            FbxWriter.Write(TripoFbx, ModelTestPaths.OutDir, P, true);
+            var imp = Importer;
+            imp.motionNodeName = "Armature/OldRoot"; // 上一份 FBX 的根骨骼，新 FBX 里没有
+            imp.SaveAndReimport();
+            var r = FbxWriter.Write(TripoFbx, ModelTestPaths.OutDir, P, false);
+            StringAssert.EndsWith("Root", Importer.motionNodeName);
+            Assert.IsTrue(r.warnings.Any(w => w.Contains("根运动")));
+        }
     }
 }
