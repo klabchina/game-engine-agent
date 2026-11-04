@@ -1,9 +1,12 @@
 // 把产物 FBX 拷进工程并设好 ModelImporter：Generic 骨骼、按 take 切动画、原地播、材质 remap。
 //
-// 两份样例（Tripo / 混元）实测：Y 轴朝上、fileScale = 0.01（Unity 默认按文件单位换算就对）、Bake Axis Conversion 开关无差别；
-// 角色站立、脚底 y≈0。take 名是 "Armature|<clip>"，24fps。
+// 两份样例（Tripo / 混元）实测：Y 轴朝上、fileScale = 0.01（Unity 默认按文件单位换算就对）、角色站立、脚底 y≈0；
+// Bake Axis Conversion 不影响高度，但会改变面朝方向（混元开了以后转了 180°）——下面的朝向纠正是按开着它算的。take 名是 "Armature|<clip>"，24fps。
 // 两家 FBX 都多带一个顶层 Icosphere（非蒙皮、半径约 1 m、在原点），是转换流程的残留：
 // 这里把它认出来（strayMeshes），Prefab 里设 inactive，不参与高度和材质 remap。
+//
+// 朝向：两家朝向不一样（按本文件的导入设置实测：Tripo 面朝 +X、混元面朝 -Z），统一的轴向设置修不了。按左右成对骨骼（L_/R_、Left/Right、
+// _L/_R、.L/.R）算出面朝方向，吸附到 90° 的倍数，给出把它转到 +Z 要绕 Y 转的角度（facingYaw），由 Prefab 的 Model 子节点去转。
 //
 // 原地播：motionNodeName 设为蒙皮根骨骼；水平位移与朝向不 bake（提取成根运动，Animator 的 Apply Root Motion 关着 → 丢弃），
 // 竖直位移 bake 进姿势。重导时程序改过的 clip 设置（循环、根运动、事件、mask、曲线…）按名字整份保留，只更新帧范围。
@@ -25,6 +28,8 @@ namespace Seedance.ModelImport.Editor
         /// <summary>蒙皮骨骼名，排序去重</summary>
         public List<string> bones = new List<string>();
         public float heightMeters;
+        /// <summary>把模型转到面朝 +Z 要绕 Y 轴转的角度（-90 / 0 / 90 / 180）；认不出朝向时为 0</summary>
+        public float facingYaw;
         /// <summary>转换流程残留的多余网格（相对模型根的路径），Prefab 里要关掉</summary>
         public List<string> strayMeshes = new List<string>();
         public List<string> warnings = new List<string>();
@@ -161,8 +166,48 @@ namespace Seedance.ModelImport.Editor
                     foreach (var v in mf.sharedMesh.vertices) Add(mf.transform.TransformPoint(v));
                 }
                 result.heightMeters = bounds?.size.y ?? 0f;
+
+                var yaw = FacingYaw(go);
+                result.facingYaw = yaw ?? 0f;
+                if (yaw == null) result.warnings.Add("认不出模型朝向（找不到左右成对的骨骼），没有转；需要的话手动转 Model 子节点");
             }
             finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
+        /// <summary>
+        /// 按左右成对骨骼算模型面朝方向，返回把它转到 +Z 要绕 Y 轴转的角度（吸附到 90° 倍数，范围 (-180, 180]）。
+        /// right = Σ(右骨骼 - 左骨骼) 的水平分量，forward = right × up。找不到成对骨骼返回 null。
+        /// </summary>
+        public static float? FacingYaw(GameObject model)
+        {
+            var left = new Dictionary<string, Vector3>();
+            var right = new Dictionary<string, Vector3>();
+            foreach (var t in model.GetComponentsInChildren<Transform>(true))
+            {
+                var (side, rest) = Side(t.name.ToLowerInvariant());
+                if (side == 'L') left[rest] = t.position;
+                else if (side == 'R') right[rest] = t.position;
+            }
+            var sum = Vector3.zero;
+            foreach (var kv in left)
+                if (right.TryGetValue(kv.Key, out var r)) sum += r - kv.Value;
+            sum.y = 0f;
+            if (sum.sqrMagnitude < 1e-8f) return null;
+            var forward = Vector3.Cross(sum.normalized, Vector3.up);
+            var yaw = Mathf.Round(Vector3.SignedAngle(forward, Vector3.forward, Vector3.up) / 90f) * 90f;
+            if (yaw <= -180f) yaw += 360f;
+            return yaw == 0f ? 0f : yaw; // 不要 -0
+        }
+
+        static (char side, string rest) Side(string n)
+        {
+            if (n.StartsWith("l_")) return ('L', n.Substring(2));
+            if (n.StartsWith("r_")) return ('R', n.Substring(2));
+            if (n.StartsWith("left")) return ('L', n.Substring(4).TrimStart('_', '.'));
+            if (n.StartsWith("right")) return ('R', n.Substring(5).TrimStart('_', '.'));
+            if (n.EndsWith("_l") || n.EndsWith(".l")) return ('L', n.Substring(0, n.Length - 2));
+            if (n.EndsWith("_r") || n.EndsWith(".r")) return ('R', n.Substring(0, n.Length - 2));
+            return ('\0', null);
         }
 
         /// <summary>FBX 里的材质槽名（Unity remap 认的名字），不含 stray 网格上的</summary>

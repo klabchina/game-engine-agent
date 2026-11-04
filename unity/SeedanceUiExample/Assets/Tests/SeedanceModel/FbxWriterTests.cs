@@ -114,5 +114,44 @@ namespace Seedance.ModelImport.Tests
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(FbxPath);
             Assert.AreEqual($"{ModelTestPaths.OutDir}/M.mat", AssetDatabase.GetAssetPath(model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial));
         }
+    
+        static GameObject Rig(params (string name, Vector3 pos)[] bones)
+        {
+            var root = new GameObject("rig");
+            foreach (var (n, p) in bones)
+            {
+                var b = new GameObject(n);
+                b.transform.SetParent(root.transform, false);
+                b.transform.position = p;
+            }
+            return root;
+        }
+
+        [Test]
+        public void FacingYaw_Tripo_Minus90()
+        {
+            // 实测 Tripo 样例面朝 +X（L_Thigh 在 +Z、R_Thigh 在 -Z），要转 -90° 才朝 +Z
+            var r = FbxWriter.Write(TripoFbx, ModelTestPaths.OutDir, P, true);
+            Assert.AreEqual(-90f, r.facingYaw);
+        }
+
+        [Test]
+        public void FacingYaw_Synthetic()
+        {
+            var cases = new (float? expect, (string, Vector3)[] bones)[]
+            {
+                (0f, new[] { ("LeftUpLeg", new Vector3(-0.1f, 0.8f, 0)), ("RightUpLeg", new Vector3(0.1f, 0.8f, 0)) }),          // 朝 +Z
+                (180f, new[] { ("LeftUpLeg", new Vector3(0.1f, 0.8f, 0)), ("RightUpLeg", new Vector3(-0.1f, 0.8f, 0)) }),        // 朝 -Z
+                (-90f, new[] { ("L_Thigh", new Vector3(0, 0.5f, 0.06f)), ("R_Thigh", new Vector3(0.01f, 0.5f, -0.05f)) }),        // 朝 +X
+                (90f, new[] { ("upperarm.R", new Vector3(0, 1.4f, 0.1f)), ("upperarm.L", new Vector3(0, 1.4f, -0.1f)) }),         // 朝 -X
+                (null, new[] { ("Spine", Vector3.up) }),
+            };
+            foreach (var (expect, bones) in cases)
+            {
+                var go = Rig(bones);
+                try { Assert.AreEqual(expect, FbxWriter.FacingYaw(go), string.Join(",", bones.Select(b => b.Item1))); }
+                finally { Object.DestroyImmediate(go); }
+            }
+        }
     }
 }

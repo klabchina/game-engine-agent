@@ -90,5 +90,34 @@ namespace Seedance.ModelImport.Tests
             Assert.IsNotNull(ModelRecordStore.FindByGuid(guid, ImportDir + "/Hero.prefab", out var at));
             Assert.AreEqual(ModelRecordStore.RecordPathFor(ImportDir + "/Hero.prefab"), at);
         }
+    
+        static Transform ModelNode(GameObject root) => root.GetComponentInChildren<Animator>(true).transform;
+
+        [Test]
+        public void Reimport_FacingFollowsUpstream_WhenNotRotatedByProgrammer()
+        {
+            SeedanceModelImporter.Run(Req());
+            // 模拟“上次的 FBX 本来就朝 +Z”：记录 0°、Model 子节点也是 0°
+            EditPrefab(root => ModelNode(root).localRotation = Quaternion.identity);
+            var r = Record();
+            r.facingYaw = 0f;
+            WriteRecord(r);
+            SeedanceModelImporter.Run(Req());
+            Assert.AreEqual(270f, ModelNode(Prefab).localEulerAngles.y, 0.5f);
+            Assert.AreEqual(-90f, Record().facingYaw);
+        }
+
+        [Test]
+        public void Reimport_FacingKept_WhenProgrammerRotated()
+        {
+            SeedanceModelImporter.Run(Req());
+            EditPrefab(root => ModelNode(root).localRotation = Quaternion.Euler(0, 45, 0));
+            var r = Record();
+            r.facingYaw = 0f;
+            WriteRecord(r);
+            var report = SeedanceModelImporter.Run(Req());
+            Assert.AreEqual(45f, ModelNode(Prefab).localEulerAngles.y, 0.5f, "程序转过的不动");
+            Assert.IsTrue(report.warnings.Any(w => w.Contains("朝向")));
+        }
     }
 }

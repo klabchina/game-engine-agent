@@ -83,6 +83,16 @@ namespace Seedance.ModelImport.Tests
         }
 
         [Test]
+        public void Run_ModelTurnedToFacePlusZ()
+        {
+            SeedanceModelImporter.Run(Req());
+            var model = Prefab.GetComponentInChildren<Animator>(true).transform;
+            Assert.AreEqual(270f, model.localEulerAngles.y, 0.5f, "Tripo 面朝 +X，Model 子节点要转 -90°");
+            Assert.AreEqual(Quaternion.identity, Prefab.transform.localRotation, "根不转，留给程序");
+            Assert.AreEqual(-90f, Record().facingYaw);
+        }
+
+        [Test]
         public void Run_PlayMode_Throws_WritesNothing()
         {
             SeedanceModelImporter.IsPlaying = () => true;

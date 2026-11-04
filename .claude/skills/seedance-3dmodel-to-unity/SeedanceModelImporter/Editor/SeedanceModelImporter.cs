@@ -94,7 +94,13 @@ namespace Seedance.ModelImport.Editor
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(fbx.fbxPath);
             var avatar = AssetDatabase.LoadAllAssetsAtPath(fbx.fbxPath).OfType<Avatar>().FirstOrDefault();
             if (first) ModelRecordStore.ReleaseMirrorPath(prefabPath);
-            var prefab = ModelPrefabBuilder.BuildOrUpdate(prefabPath, model, controller, avatar, first ? fbx.strayMeshes : null, report.warnings);
+            var prefab = ModelPrefabBuilder.BuildOrUpdate(prefabPath, model, controller, avatar, first ? fbx.strayMeshes : null,
+                fbx.facingYaw, record?.facingYaw, report.warnings);
+            // 记录里存“导入设到 Model 子节点上的朝向”：这次没改成（程序转过）就沿用上次的，下次照样认得出程序转过
+            var modelNode = prefab.GetComponentsInChildren<Animator>(true).FirstOrDefault()?.transform;
+            var appliedYaw = modelNode != null && Mathf.Abs(Mathf.DeltaAngle(modelNode.localEulerAngles.y, fbx.facingYaw)) < 0.5f
+                ? fbx.facingYaw
+                : record?.facingYaw ?? fbx.facingYaw;
 
             if (record != null)
                 report.removedBones.AddRange(record.bones.Except(fbx.bones).OrderBy(b => b, StringComparer.Ordinal));
@@ -110,6 +116,7 @@ namespace Seedance.ModelImport.Editor
                 }).ToList(),
                 materials = mats.Values.Select(m => AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(m))).Distinct().ToList(),
                 bones = fbx.bones,
+                facingYaw = appliedYaw,
             };
             try { ModelRecordStore.Save(prefabPath, newRecord, recordPath); }
             catch (Exception ex) when (!(ex is ModelImportException))

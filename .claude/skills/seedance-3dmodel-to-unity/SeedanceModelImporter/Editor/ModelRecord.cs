@@ -30,5 +30,7 @@ namespace Seedance.ModelImport.Editor
         public List<string> materials = new List<string>();
         /// <summary>上次导入的骨骼名（排序去重），用来发现骨骼改名</summary>
         public List<string> bones = new List<string>();
+        /// <summary>导入时给 &lt;P&gt;_Model 子节点设的朝向（绕 Y 轴的度数），重导时用来判断程序有没有转过它</summary>
+        public float facingYaw;
     }
 }
