@@ -59,6 +59,15 @@ namespace Seedance.UiImport.Editor
             if (!string.IsNullOrEmpty(previousPath) && Normalize(previousPath) != path) Delete(previousPath);
         }
 
+        /// <summary>导入时的设计分辨率（离屏截图用）。Prefab 没有导入记录抛 UiImportException</summary>
+        public static (int width, int height) DesignSize(string prefabPath)
+        {
+            var guid = AssetDatabase.AssetPathToGUID(prefabPath);
+            var r = string.IsNullOrEmpty(guid) ? null : FindByGuid(guid, prefabPath, out _);
+            if (r == null) throw new UiImportException($"{prefabPath} 不是 Seedance UI 导入的 Prefab（{Root}/ 下没有它的记录）");
+            return (r.designWidth, r.designHeight);
+        }
+
         /// <summary>
         /// 首次导入前调用：镜像路径上已有记录、而它属于一个被挪到别处的 Prefab（还没重导过），先把记录搬到那个 Prefab 的镜像路径，
         /// 免得被这次的新记录覆盖掉。记录指向的 Prefab 已经不存在，就留着让新记录覆盖。

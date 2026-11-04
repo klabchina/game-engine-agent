@@ -12,7 +12,11 @@ namespace Seedance.UiImport.Tests
     public class PrefabBuildTests
     {
         [TearDown]
-        public void TearDown() => AssetDatabase.DeleteAsset(TestPaths.OutDir);
+        public void TearDown()
+        {
+            AssetDatabase.DeleteAsset(TestPaths.OutDir);
+            AssetDatabase.DeleteAsset(TestPaths.RecordOutDir);
+        }
 
         [Test]
         public void Build_Hierarchy()
@@ -24,8 +28,9 @@ namespace Seedance.UiImport.Tests
             Assert.AreEqual(Vector2.one, rt.anchorMax);
             Assert.IsNull(p.GetComponent<Canvas>());
             Assert.IsNull(p.GetComponent<CanvasScaler>());
-            Assert.IsNotNull(p.GetComponent<SeedanceUiRoot>());
-            Assert.AreEqual(2560, p.GetComponent<SeedanceUiRoot>().designWidth);
+            Assert.AreEqual(2560, Record().designWidth);
+            Assert.AreEqual(1440, Record().designHeight);
+            Assert.AreEqual(AssetDatabase.AssetPathToGUID(PrefabPath), Record().prefabGuid);
 
             Assert.AreEqual("panel_e1", Node(p, "button_e2").transform.parent.name);
             Assert.AreEqual("bar_e11", Node(p, "text_e13").transform.parent.name);
@@ -87,15 +92,19 @@ namespace Seedance.UiImport.Tests
         }
 
         [Test]
-        public void Build_Markers()
+        public void Build_Record()
         {
             var (p, report) = Build();
-            var markers = p.GetComponentsInChildren<SeedanceUiElement>(true);
-            Assert.AreEqual(65, markers.Length);
-            CollectionAssert.AreEquivalent(Doc().elements.Select(e => e.id), markers.Select(m => m.elementId));
-            var m3 = Node(p, "text_e3").GetComponent<SeedanceUiElement>();
+            var rec = Record();
+            Assert.AreEqual(65, rec.elements.Count);
+            CollectionAssert.AreEquivalent(Doc().elements.Select(e => e.id), rec.elements.Select(m => m.elementId));
+            var m3 = rec.elements.Single(m => m.elementId == "e3");
             Assert.AreEqual("标题", m3.sourceName);
             Assert.AreEqual("text", m3.type);
+            Assert.AreEqual("e1", m3.layoutParentId);
+            Assert.AreEqual(UiRecordStore.RootParentId, rec.elements.Single(m => m.elementId == "e1").layoutParentId);
+            foreach (var e in Doc().elements)
+                Assert.AreEqual(UiNaming.NodeName(e), NodeOf(p, e.id)?.name, $"{e.id} 的 fileId 要对得上节点");
             Assert.AreEqual(65, report.created.Count);
             Assert.AreEqual("e3 标题", report.created[2]);
         }
@@ -112,9 +121,18 @@ namespace Seedance.UiImport.Tests
             var n = Node(p, "button_e2");
             Assert.IsNull(n.GetComponent<Image>());
             Assert.IsNull(n.GetComponent<Button>());
-            Assert.IsNotNull(n.GetComponent<SeedanceUiElement>());
+            Assert.AreSame(n, NodeOf(p, "e2"));
             Assert.AreEqual(new Vector2(1961, 7), ((RectTransform)n.transform).anchoredPosition);
             CollectionAssert.Contains(report.missing, "e2 " + e.name);
+        }
+
+        [Test]
+        public void Build_NoSeedanceComponents()
+        {
+            var (p, _) = Build();
+            var seedance = p.GetComponentsInChildren<Component>(true)
+                .Where(c => c != null && (c.GetType().Namespace ?? "").StartsWith("Seedance")).ToList();
+            CollectionAssert.IsEmpty(seedance.Select(c => $"{c.name}:{c.GetType().Name}"));
         }
     }
 }

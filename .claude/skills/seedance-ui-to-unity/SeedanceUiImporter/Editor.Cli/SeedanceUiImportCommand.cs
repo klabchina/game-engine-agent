@@ -46,9 +46,8 @@ namespace Seedance.UiImport.Editor
         {
             var asset = AssetDatabase.LoadAssetAtPath<GameObject>(prefab);
             if (asset == null) throw new UiImportException($"找不到 Prefab：{prefab}");
-            var root = asset.GetComponent<SeedanceUiRoot>();
-            if (root == null) throw new UiImportException($"{prefab} 不是 Seedance UI 导入的 Prefab（根上没有 SeedanceUiRoot）");
-            PrefabCapture.Capture(asset, root.designWidth, root.designHeight, @out);
+            var (width, height) = UiRecordStore.DesignSize(prefab);
+            PrefabCapture.Capture(asset, width, height, @out);
             return Path.GetFullPath(@out);
         }
     }

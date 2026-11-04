@@ -2,7 +2,6 @@
     "name": "Seedance.UiImport.Tests",
     "rootNamespace": "Seedance.UiImport.Tests",
     "references": [
-        "Seedance.UiImport.Runtime",
         "Seedance.UiImport.Editor",
         "UnityEngine.UI",
         "Unity.TextMeshPro",

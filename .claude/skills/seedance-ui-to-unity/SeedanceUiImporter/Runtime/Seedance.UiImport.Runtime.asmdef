@@ -1,6 +1,0 @@
-{
-    "name": "Seedance.UiImport.Runtime",
-    "rootNamespace": "Seedance.UiImport",
-    "references": [],
-    "autoReferenced": true
-}

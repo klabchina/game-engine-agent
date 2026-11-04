@@ -17,17 +17,25 @@ namespace Seedance.UiImport.Tests
         {
             AssetDatabase.DeleteAsset("Assets/Product");
             AssetDatabase.DeleteAsset(TestPaths.OutDir);
+            AssetDatabase.DeleteAsset(TestPaths.RecordOutDir);
         }
 
-        static GameObject MakePrefab(string name)
+        /// <summary>存一个 Prefab；withRecord 时同时写一份导入记录（= 导入出来的 UI）</summary>
+        static GameObject MakePrefab(string name, bool withRecord = true)
         {
             System.IO.Directory.CreateDirectory(TestPaths.OutDir);
             var go = new GameObject(name, typeof(RectTransform));
-            go.AddComponent<SeedanceUiRoot>();
-            var prefab = PrefabUtility.SaveAsPrefabAsset(go, $"{TestPaths.OutDir}/{name}.prefab");
+            var path = $"{TestPaths.OutDir}/{name}.prefab";
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
+            if (withRecord)
+                UiRecordStore.Save(path, new UiRecord { prefabGuid = AssetDatabase.AssetPathToGUID(path), designWidth = 2560, designHeight = 1440 }, null);
             return prefab;
         }
+
+        /// <summary>Canvas 下所有直接子节点</summary>
+        static GameObject[] CanvasChildren(Scene s) =>
+            Find<Canvas>(s).transform.Cast<Transform>().Select(t => t.gameObject).ToArray();
 
         /// <summary>以 Additive 打开展示场景检查，完了关掉</summary>
         static void Inspect(System.Action<Scene> check)
@@ -88,7 +96,7 @@ namespace Seedance.UiImport.Tests
             ShowcaseScene.Show(b, 2560, 1440, new ImportReport());
             Inspect(s =>
             {
-                var roots = Find<Canvas>(s).GetComponentsInChildren<SeedanceUiRoot>(true);
+                var roots = CanvasChildren(s);
                 Assert.AreEqual(2, roots.Length);
                 Assert.IsTrue(roots.Single(r => r.name == "B").gameObject.activeSelf);
                 Assert.IsFalse(roots.Single(r => r.name == "A").gameObject.activeSelf);
@@ -96,7 +104,7 @@ namespace Seedance.UiImport.Tests
             ShowcaseScene.Show(a, 2560, 1440, new ImportReport());
             Inspect(s =>
             {
-                var roots = Find<Canvas>(s).GetComponentsInChildren<SeedanceUiRoot>(true);
+                var roots = CanvasChildren(s);
                 Assert.AreEqual(2, roots.Length);
                 Assert.IsTrue(roots.Single(r => r.name == "A").gameObject.activeSelf);
                 Assert.IsFalse(roots.Single(r => r.name == "B").gameObject.activeSelf);
@@ -110,9 +118,32 @@ namespace Seedance.UiImport.Tests
             ShowcaseScene.Show(a, 2560, 1440, new ImportReport());
             Inspect(s =>
             {
-                var inst = Find<SeedanceUiRoot>(s).gameObject;
+                var inst = CanvasChildren(s).Single();
                 Assert.AreSame(a, PrefabUtility.GetCorrespondingObjectFromSource(inst));
                 Assert.AreEqual("Canvas", inst.transform.parent.name);
+            });
+        }
+
+        [Test]
+        public void Show_IgnoresNonSeedanceChild()
+        {
+            var a = MakePrefab("A");
+            ShowcaseScene.Show(a, 2560, 1440, new ImportReport());
+            // 程序在展示场景的 Canvas 下手放了一个不是导入出来的 Prefab
+            var manual = MakePrefab("Manual", withRecord: false);
+            var scene = EditorSceneManager.OpenScene(ShowcaseScene.ScenePath, OpenSceneMode.Additive);
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(manual, scene);
+            inst.transform.SetParent(Find<Canvas>(scene).transform, false);
+            EditorSceneManager.SaveScene(scene);
+            EditorSceneManager.CloseScene(scene, true);
+
+            ShowcaseScene.Show(MakePrefab("B"), 2560, 1440, new ImportReport());
+            Inspect(s =>
+            {
+                var roots = CanvasChildren(s);
+                Assert.IsTrue(roots.Single(r => r.name == "Manual").activeSelf, "不是导入的 UI，不能被隐藏");
+                Assert.IsFalse(roots.Single(r => r.name == "A").activeSelf);
+                Assert.IsTrue(roots.Single(r => r.name == "B").activeSelf);
             });
         }
 

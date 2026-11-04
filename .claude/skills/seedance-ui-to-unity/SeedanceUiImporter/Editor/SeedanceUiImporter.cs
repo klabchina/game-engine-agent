@@ -25,6 +25,10 @@ namespace Seedance.UiImport.Editor
                 throw new UiImportException($"Prefab 名只能用英文字母、数字、_、-：{prefabName}" +
                                             (string.IsNullOrEmpty(req.prefabName) ? "（取自导入目录名，可以另传 prefabName）" : ""));
 
+            var prefabPath = $"{importDir}/{prefabName}.prefab";
+            // 重导时记录读不出来就停下，这时还什么都没写
+            PrefabBuilder.EnsureRecordReadable(prefabPath);
+
             using var source = UiSource.Open(req.source);
             var doc = UiLayoutParser.Parse(File.ReadAllText(source.LayoutJsonPath));
             var report = new ImportReport();
@@ -42,7 +46,7 @@ namespace Seedance.UiImport.Editor
                 font = FontResolver.Resolve(req.tmpFont, req.fontFile, importDir);
             }
 
-            var prefab = PrefabBuilder.BuildOrUpdate(doc, sprites.byElementId, font, $"{importDir}/{prefabName}.prefab", report);
+            var prefab = PrefabBuilder.BuildOrUpdate(doc, sprites.byElementId, font, prefabPath, report);
             ShowcaseScene.Show(prefab, doc.resolution.width, doc.resolution.height, report);
             AssetDatabase.SaveAssets();
             return report;

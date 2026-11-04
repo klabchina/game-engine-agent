@@ -17,6 +17,7 @@ namespace Seedance.UiImport.Tests
         public void TearDown()
         {
             AssetDatabase.DeleteAsset(TestPaths.OutDir);
+            AssetDatabase.DeleteAsset(TestPaths.RecordOutDir);
             if (System.IO.File.Exists(png)) System.IO.File.Delete(png);
         }
 
@@ -37,6 +38,24 @@ namespace Seedance.UiImport.Tests
             var panel = tex.GetPixel(700, 1440 - 700);
             Assert.Greater(Mathf.Abs(bg.r - panel.r) + Mathf.Abs(bg.g - panel.g) + Mathf.Abs(bg.b - panel.b), 0.1f);
             Object.DestroyImmediate(tex);
+        }
+
+        [Test]
+        public void DesignSize_FromRecord()
+        {
+            PrefabFixture.Build();
+            Assert.AreEqual((2560, 1440), UiRecordStore.DesignSize(PrefabFixture.PrefabPath));
+        }
+
+        [Test]
+        public void DesignSize_NoRecord_Throws()
+        {
+            System.IO.Directory.CreateDirectory(TestPaths.OutDir);
+            var go = new GameObject("Plain", typeof(RectTransform));
+            PrefabUtility.SaveAsPrefabAsset(go, TestPaths.OutDir + "/Plain.prefab");
+            Object.DestroyImmediate(go);
+            var ex = Assert.Throws<UiImportException>(() => UiRecordStore.DesignSize(TestPaths.OutDir + "/Plain.prefab"));
+            StringAssert.Contains("没有它的记录", ex.Message);
         }
     }
 }

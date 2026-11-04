@@ -14,7 +14,11 @@ namespace Seedance.UiImport.Tests
         public void SetUp() => Build();
 
         [TearDown]
-        public void TearDown() => AssetDatabase.DeleteAsset(TestPaths.OutDir);
+        public void TearDown()
+        {
+            AssetDatabase.DeleteAsset(TestPaths.OutDir);
+            AssetDatabase.DeleteAsset(TestPaths.RecordOutDir);
+        }
 
         static GameObject Load() => AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
 
@@ -35,7 +39,8 @@ namespace Seedance.UiImport.Tests
             Assert.AreEqual(new Vector2(1969, 9), Rt(p, "button_e2").anchoredPosition);
             CollectionAssert.Contains(report.updated, "e2 " + doc.Find("e2").name);
             Assert.IsEmpty(report.created);
-            Assert.AreEqual(1, Load().GetComponentsInChildren<SeedanceUiElement>(true).Count(m => m.elementId == "e2"));
+            Assert.AreEqual(1, Record().elements.Count(m => m.elementId == "e2"));
+            Assert.AreSame(Node(Load(), "button_e2"), NodeOf(Load(), "e2"));
         }
 
         [Test]
@@ -141,7 +146,7 @@ namespace Seedance.UiImport.Tests
             doc.Find("e8").type = "button";
             var (p, report) = Build(doc);
             Assert.IsNull(Node(p, "panel_e8").GetComponent<Button>());
-            Assert.AreEqual("panel", Node(p, "panel_e8").GetComponent<SeedanceUiElement>().type);
+            Assert.AreEqual("panel", Record().elements.Single(m => m.elementId == "e8").type);
             CollectionAssert.Contains(report.typeChanged, "e8 " + doc.Find("e8").name);
         }
     }

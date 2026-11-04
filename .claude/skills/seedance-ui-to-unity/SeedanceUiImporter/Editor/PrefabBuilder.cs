@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -22,27 +23,49 @@ namespace Seedance.UiImport.Editor
         }
 
         /// <summary>
-        /// 重导：按 elementId 找回节点，只更新 Sprite、位置、尺寸。文字、同级顺序、显隐、已有组件都归程序，不碰；
-        /// 父节点只在程序没挪过时跟着上游改。没有 SeedanceUiElement 的节点（手加的）、嵌套进来的别的 Seedance Prefab 完全不碰。
+        /// Prefab 已存在时确认它的导入记录读得出来，否则抛 UiImportException。导入流程在写任何文件之前调用，
+        /// 保证记录有问题时工程里什么都不变。Prefab 不存在（首次导入）什么都不做。
+        /// </summary>
+        public static void EnsureRecordReadable(string prefabPath)
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null) RequireRecord(prefabPath, out _);
+        }
+
+        static UiRecord RequireRecord(string prefabPath, out string recordPath)
+        {
+            var record = UiRecordStore.FindByGuid(AssetDatabase.AssetPathToGUID(prefabPath), prefabPath, out recordPath);
+            if (record == null)
+                throw new UiImportException($"{prefabPath} 已存在但找不到它的导入记录（{UiRecordStore.Root}/ 下）。" +
+                                            "删掉这个 Prefab 再导入会按首次导入重建（手加的内容会丢）");
+            return record;
+        }
+
+        /// <summary>
+        /// 重导：按记录里的 fileId 找回节点，只更新 Sprite、位置、尺寸。文字、同级顺序、显隐、已有组件都归程序，不碰；
+        /// 父节点只在程序没挪过时跟着上游改。记录里没有的节点（手加的、复制出来的、嵌套进来的别的 Prefab）完全不碰；
+        /// 记录里有、Prefab 里找不到的（程序删掉了）按新元素重建。
         /// </summary>
         static GameObject Update(UiLayoutDoc doc, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
             string prefabPath, ImportReport report)
         {
+            var record = RequireRecord(prefabPath, out var recordPath);
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             var root = PrefabUtility.LoadPrefabContents(prefabPath);
             try
             {
-                var rootInfo = root.GetComponent<SeedanceUiRoot>();
+                var byFileId = PrefabNodeIds.Map(asset, root);
                 var nodes = new Dictionary<string, GameObject>();
-                foreach (var m in root.GetComponentsInChildren<SeedanceUiElement>(true))
+                var entries = new Dictionary<string, UiRecordElement>();
+                foreach (var el in record.elements)
                 {
-                    // 程序可能把别的导入出来的 Prefab 嵌进来，它们的 id 也是 e1…eN，只认归属本根的标记
-                    if (m.GetComponentInParent<SeedanceUiRoot>(true) != rootInfo) continue;
-                    if (string.IsNullOrEmpty(m.elementId) || nodes.ContainsKey(m.elementId))
+                    if (string.IsNullOrEmpty(el.elementId) || entries.ContainsKey(el.elementId))
                     {
-                        report.warnings.Add($"节点 {m.name} 的 elementId「{m.elementId}」为空或重复，跳过");
+                        report.warnings.Add($"导入记录里的 elementId「{el.elementId}」为空或重复，跳过");
                         continue;
                     }
-                    nodes[m.elementId] = m.gameObject;
+                    if (!byFileId.TryGetValue(el.fileId, out var go)) continue;
+                    nodes[el.elementId] = go;
+                    entries[el.elementId] = el;
                 }
                 var docIds = new HashSet<string>();
                 foreach (var e in doc.elements) docIds.Add(e.id);
@@ -52,7 +75,7 @@ namespace Seedance.UiImport.Editor
                 foreach (var e in doc.elements)
                 {
                     if (nodes.ContainsKey(e.id)) continue;
-                    nodes[e.id] = CreateNode(e, sprites, font, report);
+                    nodes[e.id] = CreateNode(e, sprites, font, report, entries);
                     added.Add(e.id);
                 }
                 // 按数组顺序处理：新节点、跟着上游换了父级的节点，都插到同级里排在它前面的那个元素之后
@@ -66,17 +89,18 @@ namespace Seedance.UiImport.Editor
                         Place(doc, e, (RectTransform)node.transform);
                         continue;
                     }
-                    UpdateNode(doc, e, node, LayoutParent(e), root.transform, nodes, sprites, font, report);
+                    UpdateNode(doc, e, node, entries[e.id], LayoutParent(e), root.transform, nodes, sprites, font, report);
                 }
 
                 foreach (var kv in nodes)
                 {
                     if (docIds.Contains(kv.Key)) continue;
                     kv.Value.SetActive(false);
-                    var m = kv.Value.GetComponent<SeedanceUiElement>();
-                    report.deactivated.Add($"{m.elementId} {m.sourceName}");
+                    report.deactivated.Add($"{kv.Key} {entries[kv.Key].sourceName}");
                 }
-                return Save(root, prefabPath);
+                var saved = Save(root, prefabPath);
+                SaveRecord(doc, prefabPath, saved, root, nodes, entries, recordPath);
+                return saved;
             }
             finally
             {
@@ -84,14 +108,14 @@ namespace Seedance.UiImport.Editor
             }
         }
 
-        static void UpdateNode(UiLayoutDoc doc, UiLayoutElement e, GameObject node, Transform layoutParent, Transform root,
-            Dictionary<string, GameObject> nodes, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font, ImportReport report)
+        static void UpdateNode(UiLayoutDoc doc, UiLayoutElement e, GameObject node, UiRecordElement entry, Transform layoutParent,
+            Transform root, Dictionary<string, GameObject> nodes, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
+            ImportReport report)
         {
-            var marker = node.GetComponent<SeedanceUiElement>();
-            if (marker.type != e.type)
+            if (entry.type != e.type)
             {
                 report.typeChanged.Add(ImportReport.Label(e));
-                report.warnings.Add($"{ImportReport.Label(e)}：类型从 {marker.type} 变成了 {e.type}，组件没改，需要的话手动调整");
+                report.warnings.Add($"{ImportReport.Label(e)}：类型从 {entry.type} 变成了 {e.type}，组件没改，需要的话手动调整");
             }
             if (e.missing) report.missing.Add(ImportReport.Label(e));
 
@@ -104,7 +128,7 @@ namespace Seedance.UiImport.Editor
             var actual = node.transform.parent;
             if (actual != layoutParent)
             {
-                var recorded = RecordedParent(marker, root, nodes);
+                var recorded = RecordedParent(entry, root, nodes);
                 if (recorded == null || actual != recorded)
                 {
                     // 程序挪走的：位置不动，尺寸照样更新（围着 pivot 变）——上游每次重出切图留边都不同
@@ -116,18 +140,16 @@ namespace Seedance.UiImport.Editor
                 node.transform.SetParent(layoutParent, false);
                 InsertInLayoutOrder(doc, e, node.transform, nodes);
             }
-            marker.layoutParentId = e.parent ?? RootParentId;
+            entry.layoutParentId = e.parent ?? UiRecordStore.RootParentId;
             Place(doc, e, (RectTransform)node.transform);
             report.updated.Add(ImportReport.Label(e));
         }
 
-        const string RootParentId = "<root>";
-
-        static Transform RecordedParent(SeedanceUiElement marker, Transform root, Dictionary<string, GameObject> nodes)
+        static Transform RecordedParent(UiRecordElement entry, Transform root, Dictionary<string, GameObject> nodes)
         {
-            if (string.IsNullOrEmpty(marker.layoutParentId)) return null;
-            if (marker.layoutParentId == RootParentId) return root;
-            return nodes.TryGetValue(marker.layoutParentId, out var p) ? p.transform : null;
+            if (string.IsNullOrEmpty(entry.layoutParentId)) return null;
+            if (entry.layoutParentId == UiRecordStore.RootParentId) return root;
+            return nodes.TryGetValue(entry.layoutParentId, out var p) ? p.transform : null;
         }
 
         /// <summary>插到同级里、数组中排在 e 前面且同父的最近那个元素之后；没有就放到最前（叠放最底）</summary>
@@ -147,18 +169,16 @@ namespace Seedance.UiImport.Editor
         static GameObject Create(UiLayoutDoc doc, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
             string prefabPath, ImportReport report)
         {
+            UiRecordStore.ReleaseMirrorPath(prefabPath);
             var root = new GameObject(Path.GetFileNameWithoutExtension(prefabPath), typeof(RectTransform));
             try
             {
                 UiGeometry.Stretch((RectTransform)root.transform);
-                var info = root.AddComponent<SeedanceUiRoot>();
-                info.designWidth = doc.resolution.width;
-                info.designHeight = doc.resolution.height;
-                info.layoutVersion = doc.version;
 
                 // 两遍：先全部建出来，再按数组顺序挂父节点，同级顺序因此等于数组（叠放）顺序
                 var nodes = new Dictionary<string, GameObject>();
-                foreach (var e in doc.elements) nodes[e.id] = CreateNode(e, sprites, font, report);
+                var entries = new Dictionary<string, UiRecordElement>();
+                foreach (var e in doc.elements) nodes[e.id] = CreateNode(e, sprites, font, report, entries);
                 foreach (var e in doc.elements)
                 {
                     var parent = e.parent != null ? nodes[e.parent].transform : root.transform;
@@ -166,12 +186,39 @@ namespace Seedance.UiImport.Editor
                     nodes[e.id].transform.SetAsLastSibling();
                     Place(doc, e, (RectTransform)nodes[e.id].transform);
                 }
-                return Save(root, prefabPath);
+                var saved = Save(root, prefabPath);
+                SaveRecord(doc, prefabPath, saved, root, nodes, entries, null);
+                return saved;
             }
             finally
             {
                 Object.DestroyImmediate(root);
             }
+        }
+
+        /// <summary>保存 Prefab 之后：按保存出的资源给每个节点填 fileId，写记录（顺序：layout 数组顺序，再接上已不在产物里的）</summary>
+        static void SaveRecord(UiLayoutDoc doc, string prefabPath, GameObject saved, GameObject clone,
+            Dictionary<string, GameObject> nodes, Dictionary<string, UiRecordElement> entries, string previousRecordPath)
+        {
+            var fileIdOf = new Dictionary<GameObject, long>();
+            foreach (var kv in PrefabNodeIds.Map(saved, clone)) fileIdOf[kv.Value] = kv.Key;
+            var record = new UiRecord
+            {
+                prefabGuid = AssetDatabase.AssetPathToGUID(prefabPath),
+                designWidth = doc.resolution.width,
+                designHeight = doc.resolution.height,
+                layoutVersion = doc.version,
+            };
+            var ordered = doc.elements.Select(e => e.id).Concat(entries.Keys.Where(id => doc.Find(id) == null));
+            foreach (var id in ordered)
+            {
+                var entry = entries[id];
+                if (!fileIdOf.TryGetValue(nodes[id], out var fileId))
+                    throw new UiImportException($"保存后找不到节点 {nodes[id].name} 的 fileID：{prefabPath}");
+                entry.fileId = fileId;
+                record.elements.Add(entry);
+            }
+            UiRecordStore.Save(prefabPath, record, previousRecordPath);
         }
 
         static GameObject Save(GameObject root, string prefabPath)
@@ -190,16 +237,18 @@ namespace Seedance.UiImport.Editor
                 : UiGeometry.Place(e.EffectiveRect, parent.EffectiveRect));
         }
 
-        /// <summary>首次建节点：名字、标记、按类型挂组件。之后这些都归程序，重导不再碰</summary>
-        internal static GameObject CreateNode(UiLayoutElement e, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
-            ImportReport report)
+        /// <summary>首次建节点：名字、按类型挂组件，并在 entries 里登记它的记录条目。之后这些都归程序，重导不再碰</summary>
+        static GameObject CreateNode(UiLayoutElement e, IReadOnlyDictionary<string, Sprite> sprites, TMP_FontAsset font,
+            ImportReport report, Dictionary<string, UiRecordElement> entries)
         {
             var go = new GameObject(UiNaming.NodeName(e), typeof(RectTransform));
-            var marker = go.AddComponent<SeedanceUiElement>();
-            marker.elementId = e.id;
-            marker.sourceName = e.name;
-            marker.type = e.type;
-            marker.layoutParentId = e.parent ?? RootParentId;
+            entries[e.id] = new UiRecordElement
+            {
+                elementId = e.id,
+                sourceName = e.name,
+                type = e.type,
+                layoutParentId = e.parent ?? UiRecordStore.RootParentId,
+            };
             report.created.Add(ImportReport.Label(e));
 
             if (e.missing) report.missing.Add(ImportReport.Label(e));

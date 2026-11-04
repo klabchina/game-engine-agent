@@ -1,4 +1,4 @@
-// 进 Unity 的资源名、节点名一律 ASCII（上游元素名是中文）。中文名存在 SeedanceUiElement.sourceName 里。
+// 进 Unity 的资源名、节点名一律 ASCII（上游元素名是中文）。中文名存在导入记录（Assets/SeedanceUI/…json）的 sourceName 里。
 
 using System.IO;
 using System.Text.RegularExpressions;

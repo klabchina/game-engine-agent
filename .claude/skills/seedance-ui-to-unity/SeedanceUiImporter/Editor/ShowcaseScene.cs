@@ -46,7 +46,7 @@ namespace Seedance.UiImport.Editor
                 GameObject instance = null;
                 foreach (Transform child in canvas.transform)
                 {
-                    if (child.GetComponent<SeedanceUiRoot>() == null) continue;
+                    if (!IsImportedUi(child.gameObject)) continue;
                     var isThis = PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject) == prefabAsset;
                     if (isThis && instance == null) instance = child.gameObject;
                     child.gameObject.SetActive(isThis);
@@ -65,6 +65,15 @@ namespace Seedance.UiImport.Editor
             {
                 if (openedHere) EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        /// <summary>Canvas 下的子节点是不是导入出来的 UI：它是某个 Prefab 的实例，且那个 Prefab 有导入记录。程序手放的东西不碰</summary>
+        static bool IsImportedUi(GameObject child)
+        {
+            var source = PrefabUtility.GetCorrespondingObjectFromSource(child);
+            if (source == null) return false;
+            var path = AssetDatabase.GetAssetPath(source);
+            return UiRecordStore.FindByGuid(AssetDatabase.AssetPathToGUID(path), path, out _) != null;
         }
 
         static Canvas FindCanvas(Scene scene)

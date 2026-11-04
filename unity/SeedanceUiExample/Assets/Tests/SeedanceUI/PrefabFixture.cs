@@ -13,14 +13,26 @@ namespace Seedance.UiImport.Tests
 
         public static UiLayoutDoc Doc() => UiLayoutParser.Parse(TestPaths.CharPanelJson);
 
-        public static (GameObject prefab, ImportReport report) Build(UiLayoutDoc doc = null)
+        public static (GameObject prefab, ImportReport report) Build(UiLayoutDoc doc = null, string prefabPath = PrefabPath)
         {
             doc ??= Doc();
             var sprites = SpriteAssetWriter.Write(doc, TestPaths.CharPanelDir, TestPaths.OutDir);
             var font = FontResolver.Resolve(null, TestPaths.RequireCachedFont(), TestPaths.OutDir);
             var report = new ImportReport();
-            var prefab = PrefabBuilder.BuildOrUpdate(doc, sprites.byElementId, font, PrefabPath, report);
+            var prefab = PrefabBuilder.BuildOrUpdate(doc, sprites.byElementId, font, prefabPath, report);
             return (prefab, report);
+        }
+
+        /// <summary>PrefabPath 的导入记录（没有返回 null）</summary>
+        public static UiRecord Record() =>
+            UiRecordStore.FindByGuid(AssetDatabase.AssetPathToGUID(PrefabPath), PrefabPath, out _);
+
+        /// <summary>按记录里的 fileId 找到 Prefab 资源里 elementId 对应的节点（没有返回 null）</summary>
+        public static GameObject NodeOf(GameObject prefab, string elementId)
+        {
+            var el = Record()?.elements.Find(x => x.elementId == elementId);
+            if (el == null) return null;
+            return PrefabNodeIds.Map(prefab, prefab).TryGetValue(el.fileId, out var go) ? go : null;
         }
 
         public static GameObject Node(GameObject root, string name) =>

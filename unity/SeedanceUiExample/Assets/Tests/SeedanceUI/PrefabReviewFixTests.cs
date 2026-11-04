@@ -11,7 +11,11 @@ namespace Seedance.UiImport.Tests
     public class PrefabReviewFixTests
     {
         [TearDown]
-        public void TearDown() => AssetDatabase.DeleteAsset(TestPaths.OutDir);
+        public void TearDown()
+        {
+            AssetDatabase.DeleteAsset(TestPaths.OutDir);
+            AssetDatabase.DeleteAsset(TestPaths.RecordOutDir);
+        }
 
         static UiLayoutDoc DocWithMissingClose()
         {

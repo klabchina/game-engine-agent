@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using Seedance.UiImport.Editor;
 using UnityEditor;
@@ -14,6 +15,7 @@ namespace Seedance.UiImport.Tests
         public void TearDown()
         {
             AssetDatabase.DeleteAsset(TestPaths.OutDir);
+            AssetDatabase.DeleteAsset(TestPaths.RecordOutDir);
             AssetDatabase.DeleteAsset("Assets/Product");
         }
 
@@ -77,6 +79,32 @@ namespace Seedance.UiImport.Tests
             var req = Req();
             req.fontFile = null;
             Assert.Throws<UiImportException>(() => SeedanceUiImporter.Run(req));
+        }
+
+        [Test]
+        public void Run_FailsBeforeSave_WritesNoRecord()
+        {
+            var req = Req();
+            req.fontFile = null;
+            Assert.Throws<UiImportException>(() => SeedanceUiImporter.Run(req));
+            Assert.IsFalse(System.IO.File.Exists(UiRecordStore.RecordPathFor(ExpectedPrefab)));
+        }
+
+        [Test]
+        public void Run_ExistingPrefabWithoutRecord_WritesNothing()
+        {
+            SeedanceUiImporter.Run(Req());
+            AssetDatabase.DeleteAsset(UiRecordStore.RecordPathFor(ExpectedPrefab));
+            var spritesDir = TestPaths.OutDir + "/CharacterPanel/Sprites";
+            var stamps = System.IO.Directory.GetFiles(spritesDir).ToDictionary(f => f, System.IO.File.GetLastWriteTimeUtc);
+            var prefabBytes = System.IO.File.ReadAllBytes(ExpectedPrefab);
+            System.Threading.Thread.Sleep(1100); // 文件时间戳精度
+
+            var ex = Assert.Throws<UiImportException>(() => SeedanceUiImporter.Run(Req(TestPaths.CharPanelDir)));
+            StringAssert.Contains("找不到它的导入记录", ex.Message);
+            foreach (var kv in stamps) Assert.AreEqual(kv.Value, System.IO.File.GetLastWriteTimeUtc(kv.Key), kv.Key);
+            CollectionAssert.AreEqual(prefabBytes, System.IO.File.ReadAllBytes(ExpectedPrefab));
+            Assert.IsFalse(System.IO.File.Exists(UiRecordStore.RecordPathFor(ExpectedPrefab)));
         }
 
         [Test]
