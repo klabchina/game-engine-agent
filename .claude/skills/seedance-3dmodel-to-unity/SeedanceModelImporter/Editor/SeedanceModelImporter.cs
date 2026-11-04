@@ -117,7 +117,7 @@ namespace Seedance.ModelImport.Editor
                 throw new ModelImportException($"Prefab 已保存，但导入记录没写成：{ex.Message}。排除原因后从版本库恢复 Prefab 再导入");
             }
 
-            // 3DViewer 在 Task 9 接上
+            ViewerScene.Show(prefab, report);
             AssetDatabase.SaveAssets();
             return report;
         }
