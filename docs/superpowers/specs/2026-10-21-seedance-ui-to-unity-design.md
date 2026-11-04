@@ -103,6 +103,8 @@ Prefab 结构
 - 读 `ui.zip` 时要按 UTF-8 解文件名：zip 里有的条目没打 UTF-8 标志。
 
 id 对应与重导
+> 2026-11-04：本节里的标记组件（`SeedanceUiElement` / `SeedanceUiRoot`）与「随 skill 装进工程」已被 `2026-11-04-seedance-ui-no-residue-design.md` 取代——Prefab 不再挂组件，结构信息改存 `Assets/SeedanceUI/` 下的记录文件；导入代码只在导入期间临时装进 `Assets/SeedanceUiImporter/`，结束即删。
+
 - 每个由导入器建的节点挂一个标记组件 `SeedanceUiElement { string elementId; string sourceName; string type; }`（runtime 脚本，随 skill 装进工程；`sourceName` 存 ui-maker 里的中文名，方便对照）。根节点挂 `SeedanceUiRoot`，记设计分辨率等来源信息。
 - **同一个 Prefab 怎么认**：按路径 `<导入目录>/<Prefab 名>.prefab`。存在就走重导，不存在就新建（我的判断）。`layout.json` 里没有任务 id，所以不靠任务 id 认；复制出来的任务导进同一路径就是覆盖更新。
 - 重导时：打开已有 Prefab（`PrefabUtility.LoadPrefabContents`），按 `elementId` 找节点：

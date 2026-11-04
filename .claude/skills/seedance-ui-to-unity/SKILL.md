@@ -7,10 +7,13 @@ description: Use when importing a Seedance ui-maker UI (the layout.json + slices
 
 ## Overview
 
-ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# 包 `SeedanceUI` 解析成 UGUI Prefab。本 skill 负责：把包推进目标工程 → 在运行中的 Editor 里调一次 `unity command seedance ui_import` → 离屏截图与 `preview.png` 对照 → 汇报。
+ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# 包 `SeedanceUiImporter` 解析成 UGUI Prefab。本 skill 负责：把包临时推进目标工程 → 在运行中的 Editor 里调一次 `unity command seedance ui_import` → 离屏截图与 `preview.png` 对照 → **把包删掉** → 汇报。
+
+- 工程里不留 Seedance 代码：包只在导入期间待在 `Assets/SeedanceUiImporter/`，流程结束（成功或失败）都删掉。
+- Prefab 上不挂 Seedance 脚本。重导要用的结构信息（元素 id、中文名、类型、父元素、节点的 fileID）存在 `Assets/SeedanceUI/<Prefab 路径去掉 Assets/>.json`，例如 `Assets/UI/X/X.prefab` → `Assets/SeedanceUI/UI/X/X.json`，随工程提交。
 
 - 直接挂在 Prefab 根下的元素（通常是 `panel_e1`）锚点和 pivot 在中心，相对父级居中；其余元素锚在各自父元素的左上角。
-- 节点、Sprite 一律 ASCII 命名（`button_e7`、`slot_e2.png`），中文名存在节点的 `SeedanceUiElement.sourceName`。
+- 节点、Sprite 一律 ASCII 命名（`button_e7`、`slot_e2.png`），中文名存在导入记录的 `sourceName`。程序改节点名、挪层级不影响重导认节点。
 - 重导只更新 **Sprite、位置、尺寸**；文字、同级顺序、已有组件、显隐归程序，不碰。父节点只在程序没挪过时跟着上游改。产物里没了的元素设 inactive，不删。
 - 同一个字体在工程里只生成一份 TMP 字体资产，后导入的 UI 共用它。
 - Prefab 根不带 Canvas；工程里会有一个展示场景 `Assets/Product/Scene/UIShowcase.unity`（带 Canvas，首次导入时创建）。
@@ -33,7 +36,7 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
    - `command -v unity`
    - `head -1 "$PROJECT/ProjectSettings/ProjectVersion.txt"` 必须是 `m_EditorVersion: 6000.` 开头，否则停下告诉用户只支持 Unity 6。
    - `grep -q com.unity.pipeline "$PROJECT/Packages/manifest.json"`，没有就 `unity pipeline install --project-path "$PROJECT"`。
-2. **推包**：`bash "$SKILL_DIR/scripts/install_package.sh" "$PROJECT"`
+2. **推包**：`bash "$SKILL_DIR/scripts/install_package.sh" "$PROJECT"`（装到 `Assets/SeedanceUiImporter/`；顺带清掉旧版装在 `Assets/SeedanceUI/` 下的代码，记录文件不动）。**从这一步起，后面任何一步失败都先做第 8 步删包，再汇报。**
 3. **Editor**：看 `unity status --format json` 里有没有 `project` 等于 `$PROJECT` 的实例。
    - 没有：`unity open "$PROJECT"`，再 `unity status --until-ready --project-path "$PROJECT"`。刚打开的 Editor 会自己编译，**不要**马上 `recompile`（会返回 503 Server Busy）。
    - 已经开着：`unity recompile --project-path "$PROJECT"`，让它编译刚推进去的包。
@@ -56,7 +59,16 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
    unity --no-banner command seedance ui_capture --prefab "<report.prefabPath>" --out "<临时目录>/capture.png" --project-path "$PROJECT" --result-only
    ```
    用 Read 打开 `capture.png` 和产物的 `preview.png`（zip 就 `unzip -p` 出来）给用户并排看。截图是深灰底、`preview.png` 带场景背景，对照 UI 本身；文字因字体不同会有细微出入。
-8. **汇报**：Prefab 路径、展示场景路径，以及 report 里非空的 `created` / `updated` / `deactivated` / `missing` / `moved` / `typeChanged` / `orphanSprites` / `warnings`（各是什么意思见下表）。
+8. **删包**（成功、失败都做）：
+   ```bash
+   bash "$SKILL_DIR/scripts/uninstall_package.sh" "$PROJECT"
+   unity --no-banner recompile --project-path "$PROJECT"
+   unity --no-banner status --until-ready --project-path "$PROJECT"
+   ```
+   `recompile` 会让 Editor 刷新资源、发现包没了并重新编译。之后 `unity --no-banner list --project-path "$PROJECT"` 里不应再有 seedance 命令。
+   - Editor 连不上 / 超时 / Safe Mode：只删文件，不等；汇报里说「包已删，请手动刷新或重开 Editor」。
+   - 删包后的编译错误：只把和 Seedance 有关的算本次失败；工程原有的、无关的照实列出。
+9. **汇报**：Prefab 路径、展示场景路径，以及 report 里非空的 `created` / `updated` / `deactivated` / `missing` / `moved` / `typeChanged` / `orphanSprites` / `warnings`（各是什么意思见下表）。
 
 ## Report 字段
 
@@ -74,7 +86,8 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
 - 照 unity-cli skill 的规则：超时、Editor 进 Safe Mode（`unity pipeline list` 的 Safe Mode 列）、连不上，如实报告做了什么、失败在哪，**不要**循环重试、换别的 Editor、或手改 `.prefab` / `.meta` / `.unity` 文本。
 - 报「Editor 正处于 Play Mode」：请用户退出 Play Mode（或 `unity command editor.playmode stop`，先问用户）后重跑；这时什么都还没写进工程。
 - `ui_import` 抛的中文错误消息就是给用户看的（路径不对、Prefab 名非 ASCII、缺字体、layout.json 不合法），原样转述并问怎么改。
-- 编译错误：看 `unity recompile --project-path "$PROJECT"` 的输出；`Assets/SeedanceUI/` 由本 skill 管理，别在工程里改它，改 `$SKILL_DIR/SeedanceUI/` 再推包。
+- 编译错误：看 `unity recompile --project-path "$PROJECT"` 的输出；`Assets/SeedanceUiImporter/` 是临时目录，别在工程里改它，改 `$SKILL_DIR/SeedanceUiImporter/` 再推包。
+- 「找不到它的导入记录」「导入记录损坏」「多份导入记录指向同一个 Prefab」：原样转述。能从版本库恢复记录最好；否则删掉那个 Prefab 再导入会按首次导入重建，**手加的内容会丢**，先问用户。这类错误发生时工程里什么都还没写。
 
 ## Common Mistakes
 
@@ -82,5 +95,6 @@ ui-maker 的产物（透明切图 + `layout.json`）由一份 Unity Editor C# �
 |---|---|
 | 不带 `--project-path`，命令打到了别的工程的 Editor | 每条 `unity` 命令都带 |
 | 期待重导刷新文字内容 | 文字只在首次建节点时写入；要重建文字就删掉那个节点再导 |
-| 手动删了 `Assets/SeedanceUI/Runtime` | Prefab 上的标记组件会变 Missing Script，重导也认不出节点；重新推包 |
+| 手动删了 / 改坏了 `Assets/SeedanceUI/` 下的记录 | 重导会报错停下；从版本库恢复记录 |
+| 导入失败后直接汇报，没删包 | 推包之后任何失败都先跑删包 |
 | 一个工程里导入横屏和竖屏两套 UI | 展示场景按首次导入的分辨率建，另一种只会得到 warning |
