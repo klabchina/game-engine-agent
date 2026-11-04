@@ -16,7 +16,7 @@
 
 动到某个引擎相关的代码前，先读对应文档：
 
-- Unity：`docs/engine/unity.md`（CLI 规则、seedance-ui-to-unity 的约定与测试）
+- Unity：`docs/engine/unity.md`（CLI 规则、seedance-ui-to-unity 与 seedance-3dmodel-to-unity 的约定与测试）
 - Unreal：尚未开始
 
 ## 约定

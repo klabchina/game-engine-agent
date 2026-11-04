@@ -27,6 +27,27 @@
         "ui-maker",
         "unity-cli"
       ]
+    },
+    {
+      "name": "seedance-3dmodel-to-unity",
+      "description": "把 Tripo / 混元生成的带骨骼动画 FBX 产物（zip 或目录）通过 Unity CLI 导入 Unity 工程，生成挂好 Animator（Controller 含全部动画）的角色 Prefab；重导只更新模型、动画与贴图",
+      "version": "1.0.0",
+      "source": "./.claude/skills/seedance-3dmodel-to-unity",
+      "strict": false,
+      "skills": [
+        "./"
+      ],
+      "category": "development",
+      "keywords": [
+        "unity",
+        "fbx",
+        "animator",
+        "prefab",
+        "tripo",
+        "hunyuan",
+        "seedance",
+        "unity-cli"
+      ]
     }
   ]
 }
