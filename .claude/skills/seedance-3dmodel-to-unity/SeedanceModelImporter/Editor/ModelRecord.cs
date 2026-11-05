@@ -1,5 +1,5 @@
 // 一个导入出来的模型 Prefab 的记录（重导时分辨哪些东西是导入生成的、哪些是程序加的）。
-// 存在 Assets/SeedanceModel/<Prefab 路径去掉 Assets/>.json，纯 JSON，不依赖任何脚本。
+// 存在 Assets/SeedanceKlab/Model/<Prefab 路径去掉 Assets/>.json，纯 JSON，不依赖任何脚本。
 
 using System;
 using System.Collections.Generic;

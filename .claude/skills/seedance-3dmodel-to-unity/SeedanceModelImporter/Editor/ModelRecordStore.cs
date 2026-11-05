@@ -1,4 +1,4 @@
-// 导入记录的位置与读写。记录统一放在 Assets/SeedanceModel/ 下，按 Prefab 路径镜像命名；
+// 导入记录的位置与读写。记录统一放在 Assets/SeedanceKlab/Model/ 下，按 Prefab 路径镜像命名；
 // 但认记录以 Prefab 的 GUID 为准——程序挪了 / 改名了 Prefab 也找得回来，下次保存时搬到新的镜像路径。
 
 using System;
@@ -12,9 +12,9 @@ namespace Seedance.ModelImport.Editor
 {
     public static class ModelRecordStore
     {
-        public const string Root = "Assets/SeedanceModel";
+        public const string Root = "Assets/SeedanceKlab/Model";
 
-        /// <summary>Assets/Characters/X.prefab → Assets/SeedanceModel/Characters/X.json</summary>
+        /// <summary>Assets/Characters/X.prefab → Assets/SeedanceKlab/Model/Characters/X.json</summary>
         public static string RecordPathFor(string prefabPath)
         {
             var p = prefabPath.Replace('\\', '/');

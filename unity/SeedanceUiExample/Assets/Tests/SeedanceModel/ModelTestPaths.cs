@@ -13,7 +13,7 @@ namespace Seedance.ModelImport.Tests
         public const string TripoFbxName = "rig-2026-11-03-m1ctb3.fbx";
         /// <summary>测试产出的资源都放这里，各测试 TearDown 时删掉</summary>
         public const string OutDir = "Assets/_SeedanceModelTestOut";
-        /// <summary>OutDir 下 Prefab 的导入记录所在目录（Assets/SeedanceModel/ 镜像），各测试 TearDown 时一并删掉</summary>
-        public const string RecordOutDir = "Assets/SeedanceModel/_SeedanceModelTestOut";
+        /// <summary>OutDir 下 Prefab 的导入记录所在目录（Assets/SeedanceKlab/Model/ 镜像），各测试 TearDown 时一并删掉</summary>
+        public const string RecordOutDir = "Assets/SeedanceKlab/Model/_SeedanceModelTestOut";
     }
 }

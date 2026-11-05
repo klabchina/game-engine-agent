@@ -46,12 +46,12 @@ namespace Seedance.ModelImport.Tests
 
         [Test]
         public void RecordPath_Mirrors() =>
-            Assert.AreEqual("Assets/SeedanceModel/Characters/Knight/Knight.json",
+            Assert.AreEqual("Assets/SeedanceKlab/Model/Characters/Knight/Knight.json",
                 ModelRecordStore.RecordPathFor("Assets/Characters/Knight/Knight.prefab"));
 
         [Test]
         public void RecordPath_NonAsciiAndSpaces() =>
-            Assert.AreEqual("Assets/SeedanceModel/角色 模型/X.json", ModelRecordStore.RecordPathFor("Assets/角色 模型/X.prefab"));
+            Assert.AreEqual("Assets/SeedanceKlab/Model/角色 模型/X.json", ModelRecordStore.RecordPathFor("Assets/角色 模型/X.prefab"));
 
         [Test]
         public void SaveThenFind_RoundTrip()
@@ -203,7 +203,7 @@ namespace Seedance.ModelImport.Tests
             var path = ModelRecordStore.RecordPathFor(PrefabPath("A"));
             WriteRaw(path, "{}");
             var ex = Assert.Throws<ModelImportException>(ModelRecordStore.ValidateAll);
-            StringAssert.Contains("Assets/SeedanceModel/", ex.Message);
+            StringAssert.Contains("Assets/SeedanceKlab/Model/", ex.Message);
         }
     }
 }

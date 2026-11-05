@@ -10,7 +10,7 @@ description: Use when importing a rigged, animated FBX output from Tripo or Huny
 Tripo / 混元生成并绑骨、带动作的 FBX 产物（zip 或解开的目录：一个 `.fbx` + `Textures/`）由一份 Unity Editor C# 包 `SeedanceModelImporter` 做成角色 Prefab。本 skill 负责：把包临时推进目标工程 → 在运行中的 Editor 里调一次 `unity command seedance model_import` → 离屏截图给用户看 → **把包删掉** → 汇报。
 
 - 工程里不留 Seedance 代码：包只在导入期间待在 `Assets/SeedanceModelImporter/`，流程结束（成功或失败）都删掉。和 `seedance-ui-to-unity` 的包互不影响。
-- Prefab 上不挂 Seedance 脚本。重导要用的信息（动画名、贴图 / 材质、骨骼名）存在 `Assets/SeedanceModel/<Prefab 路径去掉 Assets/>.json`，随工程提交。
+- Prefab 上不挂 Seedance 脚本。重导要用的信息（动画名、贴图 / 材质、骨骼名）存在 `Assets/SeedanceKlab/Model/<Prefab 路径去掉 Assets/>.json`，随工程提交（`seedance-ui-to-unity` 的记录在旁边的 `Assets/SeedanceKlab/UI/`）。
 
 导出的东西：
 
@@ -47,7 +47,7 @@ IMPORT_DIR/
    - `head -1 "$PROJECT/ProjectSettings/ProjectVersion.txt"` 必须是 `m_EditorVersion: 6000.` 开头，否则停下告诉用户只支持 Unity 6。
    - `grep -q com.unity.render-pipelines.universal "$PROJECT/Packages/manifest.json"`，没有就停下告诉用户：材质用 URP Lit，工程得先装 URP。
    - `grep -q com.unity.pipeline "$PROJECT/Packages/manifest.json"`，没有就 `unity pipeline install --project-path "$PROJECT"`。
-2. **推包**：`bash "$SKILL_DIR/scripts/install_package.sh" "$PROJECT"`（装到 `Assets/SeedanceModelImporter/`）。**从这一步起，后面任何一步失败都先做第 6 步删包，再汇报。**
+2. **推包**：`bash "$SKILL_DIR/scripts/install_package.sh" "$PROJECT"`（装到 `Assets/SeedanceModelImporter/`；旧版的记录目录 `Assets/SeedanceModel/` 会连同 .meta 迁到 `Assets/SeedanceKlab/Model/`）。**从这一步起，后面任何一步失败都先做第 6 步删包，再汇报。**
 3. **Editor**：看 `unity status --format json` 里有没有 `project` 等于 `$PROJECT` 的实例。
    - 没有：`unity open "$PROJECT"`，再 `unity status --until-ready --project-path "$PROJECT"`。刚打开的 Editor 会自己编译，**不要**马上 `recompile`（会返回 503 Server Busy）。
    - 已经开着：`unity recompile --project-path "$PROJECT"`，让它编译刚推进去的包。
@@ -95,6 +95,7 @@ IMPORT_DIR/
 - 编译错误：看 `unity recompile --project-path "$PROJECT"` 的输出；`Assets/SeedanceModelImporter/` 是临时目录，别在工程里改它，改 `$SKILL_DIR/SeedanceModelImporter/` 再推包。
 - 「找不到它的导入记录」「导入记录损坏」「多份导入记录指向同一个 Prefab」：原样转述。能从版本库恢复记录最好；否则删掉那个 Prefab 再导入会按首次导入重建，**程序加的东西会丢**，先问用户。这类错误发生时工程里什么都还没写。
 - 「导入记录是只读的」：多半是版本管理（如 Perforce）没 checkout，请用户 checkout 那份记录后重跑；这时什么都还没写。
+- 推包报「Assets/SeedanceModel/ 和 Assets/SeedanceKlab/Model/ 里都有导入记录」：旧版记录目录从版本库回来了（多半是别人用旧版导入后提交的）。原样转述，请用户把旧目录里的记录连同 .meta 并进新目录、删掉旧目录后重跑；这时什么都还没写，包也没推。
 - 「Prefab 已保存，但导入记录没写成」：照报错排除原因后，从版本库恢复 Prefab 再导。
 
 ## Common Mistakes
@@ -104,6 +105,6 @@ IMPORT_DIR/
 | 不带 `--project-path`，命令打到了别的工程的 Editor | 每条 `unity` 命令都带 |
 | 期待 Animator 里已经连好 idle → walk 的切换 | 不连；切换线、参数由程序加，重导不会碰 |
 | 期待角色跟着 walk 动画往前走 | 原地播；移动由程序控制 |
-| 手动删了 / 改坏了 `Assets/SeedanceModel/` 下的记录 | 重导会报错停下；从版本库恢复记录 |
+| 手动删了 / 改坏了 `Assets/SeedanceKlab/Model/` 下的记录 | 重导会报错停下；从版本库恢复记录 |
 | 导入失败后直接汇报，没删包 | 推包之后任何失败都先跑删包 |
 | 把 UI 产物（layout.json + slices/）交给本 skill | 那是 `seedance-ui-to-unity` 的活 |

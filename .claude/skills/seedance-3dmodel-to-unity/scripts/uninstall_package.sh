@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 删掉 install_package.sh 推进工程的 Assets/SeedanceModelImporter/ 与它的 .meta。Assets/SeedanceModel/（导入记录）不碰。
+# 删掉 install_package.sh 推进工程的 Assets/SeedanceModelImporter/ 与它的 .meta。Assets/SeedanceKlab/Model/（导入记录）不碰。
 # 没装过也算成功。只删文件；让 Editor 刷新由调用方用 unity 命令做。
 # 用法：uninstall_package.sh <unity 工程路径>
 set -euo pipefail
