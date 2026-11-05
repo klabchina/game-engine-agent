@@ -1,0 +1,1364 @@
+{
+  "version": 1,
+  "resolution": {
+    "width": 2560,
+    "height": 1440
+  },
+  "background": "background.png",
+  "elements": [
+    {
+      "id": "e1",
+      "name": "面板",
+      "type": "panel",
+      "image": "slices/面板.png",
+      "rect": {
+        "x": 254,
+        "y": 143,
+        "w": 2056,
+        "h": 1156
+      },
+      "drawnRect": {
+        "x": 240,
+        "y": 130,
+        "w": 2080,
+        "h": 1180
+      },
+      "parent": null,
+      "genLayer": 1,
+      "order": 0,
+      "sameAs": null
+    },
+    {
+      "id": "e2",
+      "name": "关闭",
+      "type": "button",
+      "image": "slices/关闭.png",
+      "rect": {
+        "x": 2213,
+        "y": 134,
+        "w": 105,
+        "h": 106
+      },
+      "drawnRect": {
+        "x": 2210,
+        "y": 130,
+        "w": 110,
+        "h": 110
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 1,
+      "sameAs": null
+    },
+    {
+      "id": "e3",
+      "name": "标题",
+      "type": "text",
+      "rect": {
+        "x": 1030,
+        "y": 170,
+        "w": 500,
+        "h": 90
+      },
+      "text": {
+        "content": "角色属性",
+        "fontSize": 64,
+        "color": "#ffe9b0",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e1",
+      "order": 2
+    },
+    {
+      "id": "e4",
+      "name": "角色展示框",
+      "type": "frame",
+      "image": "slices/角色展示框.png",
+      "rect": {
+        "x": 342,
+        "y": 306,
+        "w": 735,
+        "h": 796
+      },
+      "drawnRect": {
+        "x": 330,
+        "y": 290,
+        "w": 760,
+        "h": 830
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 3,
+      "sameAs": null
+    },
+    {
+      "id": "e5",
+      "name": "角色名",
+      "type": "text",
+      "rect": {
+        "x": 460,
+        "y": 1010,
+        "w": 500,
+        "h": 70
+      },
+      "text": {
+        "content": "艾莉西亚  Lv.60",
+        "fontSize": 44,
+        "color": "#ffe9b0",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e4",
+      "order": 4
+    },
+    {
+      "id": "e6",
+      "name": "切换角色",
+      "type": "button",
+      "image": "slices/切换角色.png",
+      "rect": {
+        "x": 574,
+        "y": 1167,
+        "w": 270,
+        "h": 89
+      },
+      "drawnRect": {
+        "x": 570,
+        "y": 1160,
+        "w": 280,
+        "h": 100
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 5,
+      "sameAs": null
+    },
+    {
+      "id": "e7",
+      "name": "切换角色文字",
+      "type": "text",
+      "rect": {
+        "x": 600,
+        "y": 1180,
+        "w": 220,
+        "h": 60
+      },
+      "text": {
+        "content": "切换角色",
+        "fontSize": 40,
+        "color": "#ffffff",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e6",
+      "order": 6
+    },
+    {
+      "id": "e8",
+      "name": "属性栏 1",
+      "type": "panel",
+      "image": "slices/属性栏_1.png",
+      "rect": {
+        "x": 1183,
+        "y": 303,
+        "w": 299,
+        "h": 802
+      },
+      "drawnRect": {
+        "x": 1170,
+        "y": 290,
+        "w": 330,
+        "h": 830
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 7,
+      "sameAs": null
+    },
+    {
+      "id": "e9",
+      "name": "栏标题 1",
+      "type": "tab",
+      "image": "slices/栏标题_1.png",
+      "rect": {
+        "x": 1196,
+        "y": 317,
+        "w": 277,
+        "h": 70
+      },
+      "drawnRect": {
+        "x": 1195,
+        "y": 315,
+        "w": 280,
+        "h": 72
+      },
+      "parent": "e8",
+      "genLayer": 3,
+      "order": 8,
+      "sameAs": null
+    },
+    {
+      "id": "e10",
+      "name": "栏标题文字 1",
+      "type": "text",
+      "rect": {
+        "x": 1195,
+        "y": 321,
+        "w": 280,
+        "h": 60
+      },
+      "text": {
+        "content": "基础属性",
+        "fontSize": 38,
+        "color": "#ffe9b0",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e9",
+      "order": 9
+    },
+    {
+      "id": "e11",
+      "name": "属性条 1",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1197,
+        "y": 434,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1195,
+        "y": 425,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e8",
+      "genLayer": 3,
+      "order": 10,
+      "sameAs": null
+    },
+    {
+      "id": "e12",
+      "name": "属性名 1",
+      "type": "text",
+      "rect": {
+        "x": 1210,
+        "y": 433,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "生命",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e11",
+      "order": 11
+    },
+    {
+      "id": "e13",
+      "name": "属性值 1",
+      "type": "text",
+      "rect": {
+        "x": 1330,
+        "y": 433,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1000",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e11",
+      "order": 12
+    },
+    {
+      "id": "e14",
+      "name": "属性条 2",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1197,
+        "y": 569,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1195,
+        "y": 560,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e8",
+      "genLayer": 3,
+      "order": 13,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e15",
+      "name": "属性名 2",
+      "type": "text",
+      "rect": {
+        "x": 1210,
+        "y": 568,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "攻击",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e14",
+      "order": 14
+    },
+    {
+      "id": "e16",
+      "name": "属性值 2",
+      "type": "text",
+      "rect": {
+        "x": 1330,
+        "y": 568,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1137",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e14",
+      "order": 15
+    },
+    {
+      "id": "e17",
+      "name": "属性条 3",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1197,
+        "y": 704,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1195,
+        "y": 695,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e8",
+      "genLayer": 3,
+      "order": 16,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e18",
+      "name": "属性名 3",
+      "type": "text",
+      "rect": {
+        "x": 1210,
+        "y": 703,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "防御",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e17",
+      "order": 17
+    },
+    {
+      "id": "e19",
+      "name": "属性值 3",
+      "type": "text",
+      "rect": {
+        "x": 1330,
+        "y": 703,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1274",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e17",
+      "order": 18
+    },
+    {
+      "id": "e20",
+      "name": "属性条 4",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1197,
+        "y": 839,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1195,
+        "y": 830,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e8",
+      "genLayer": 3,
+      "order": 19,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e21",
+      "name": "属性名 4",
+      "type": "text",
+      "rect": {
+        "x": 1210,
+        "y": 838,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "速度",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e20",
+      "order": 20
+    },
+    {
+      "id": "e22",
+      "name": "属性值 4",
+      "type": "text",
+      "rect": {
+        "x": 1330,
+        "y": 838,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1411",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e20",
+      "order": 21
+    },
+    {
+      "id": "e23",
+      "name": "属性条 5",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1197,
+        "y": 974,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1195,
+        "y": 965,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e8",
+      "genLayer": 3,
+      "order": 22,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e24",
+      "name": "属性名 5",
+      "type": "text",
+      "rect": {
+        "x": 1210,
+        "y": 973,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "暴击",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e23",
+      "order": 23
+    },
+    {
+      "id": "e25",
+      "name": "属性值 5",
+      "type": "text",
+      "rect": {
+        "x": 1330,
+        "y": 973,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1548",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e23",
+      "order": 24
+    },
+    {
+      "id": "e26",
+      "name": "属性栏 2",
+      "type": "panel",
+      "image": "slices/属性栏_1.png",
+      "rect": {
+        "x": 1553,
+        "y": 303,
+        "w": 299,
+        "h": 802
+      },
+      "drawnRect": {
+        "x": 1540,
+        "y": 290,
+        "w": 330,
+        "h": 830
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 25,
+      "sameAs": "e8"
+    },
+    {
+      "id": "e27",
+      "name": "栏标题 2",
+      "type": "tab",
+      "image": "slices/栏标题_1.png",
+      "rect": {
+        "x": 1566,
+        "y": 317,
+        "w": 277,
+        "h": 70
+      },
+      "drawnRect": {
+        "x": 1565,
+        "y": 315,
+        "w": 280,
+        "h": 72
+      },
+      "parent": "e26",
+      "genLayer": 3,
+      "order": 26,
+      "sameAs": "e9"
+    },
+    {
+      "id": "e28",
+      "name": "栏标题文字 2",
+      "type": "text",
+      "rect": {
+        "x": 1565,
+        "y": 321,
+        "w": 280,
+        "h": 60
+      },
+      "text": {
+        "content": "战斗属性",
+        "fontSize": 38,
+        "color": "#ffe9b0",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e27",
+      "order": 27
+    },
+    {
+      "id": "e29",
+      "name": "属性条 6",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1567,
+        "y": 434,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1565,
+        "y": 425,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e26",
+      "genLayer": 3,
+      "order": 28,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e30",
+      "name": "属性名 6",
+      "type": "text",
+      "rect": {
+        "x": 1580,
+        "y": 433,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "命中",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e29",
+      "order": 29
+    },
+    {
+      "id": "e31",
+      "name": "属性值 6",
+      "type": "text",
+      "rect": {
+        "x": 1700,
+        "y": 433,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1300",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e29",
+      "order": 30
+    },
+    {
+      "id": "e32",
+      "name": "属性条 7",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1567,
+        "y": 569,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1565,
+        "y": 560,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e26",
+      "genLayer": 3,
+      "order": 31,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e33",
+      "name": "属性名 7",
+      "type": "text",
+      "rect": {
+        "x": 1580,
+        "y": 568,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "闪避",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e32",
+      "order": 32
+    },
+    {
+      "id": "e34",
+      "name": "属性值 7",
+      "type": "text",
+      "rect": {
+        "x": 1700,
+        "y": 568,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1437",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e32",
+      "order": 33
+    },
+    {
+      "id": "e35",
+      "name": "属性条 8",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1567,
+        "y": 704,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1565,
+        "y": 695,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e26",
+      "genLayer": 3,
+      "order": 34,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e36",
+      "name": "属性名 8",
+      "type": "text",
+      "rect": {
+        "x": 1580,
+        "y": 703,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "暴伤",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e35",
+      "order": 35
+    },
+    {
+      "id": "e37",
+      "name": "属性值 8",
+      "type": "text",
+      "rect": {
+        "x": 1700,
+        "y": 703,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1574",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e35",
+      "order": 36
+    },
+    {
+      "id": "e38",
+      "name": "属性条 9",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1567,
+        "y": 839,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1565,
+        "y": 830,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e26",
+      "genLayer": 3,
+      "order": 37,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e39",
+      "name": "属性名 9",
+      "type": "text",
+      "rect": {
+        "x": 1580,
+        "y": 838,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "穿透",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e38",
+      "order": 38
+    },
+    {
+      "id": "e40",
+      "name": "属性值 9",
+      "type": "text",
+      "rect": {
+        "x": 1700,
+        "y": 838,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1711",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e38",
+      "order": 39
+    },
+    {
+      "id": "e41",
+      "name": "属性条 10",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1567,
+        "y": 974,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1565,
+        "y": 965,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e26",
+      "genLayer": 3,
+      "order": 40,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e42",
+      "name": "属性名 10",
+      "type": "text",
+      "rect": {
+        "x": 1580,
+        "y": 973,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "格挡",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e41",
+      "order": 41
+    },
+    {
+      "id": "e43",
+      "name": "属性值 10",
+      "type": "text",
+      "rect": {
+        "x": 1700,
+        "y": 973,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1848",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e41",
+      "order": 42
+    },
+    {
+      "id": "e44",
+      "name": "属性栏 3",
+      "type": "panel",
+      "image": "slices/属性栏_1.png",
+      "rect": {
+        "x": 1923,
+        "y": 303,
+        "w": 299,
+        "h": 802
+      },
+      "drawnRect": {
+        "x": 1910,
+        "y": 290,
+        "w": 330,
+        "h": 830
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 43,
+      "sameAs": "e8"
+    },
+    {
+      "id": "e45",
+      "name": "栏标题 3",
+      "type": "tab",
+      "image": "slices/栏标题_1.png",
+      "rect": {
+        "x": 1936,
+        "y": 317,
+        "w": 277,
+        "h": 70
+      },
+      "drawnRect": {
+        "x": 1935,
+        "y": 315,
+        "w": 280,
+        "h": 72
+      },
+      "parent": "e44",
+      "genLayer": 3,
+      "order": 44,
+      "sameAs": "e9"
+    },
+    {
+      "id": "e46",
+      "name": "栏标题文字 3",
+      "type": "text",
+      "rect": {
+        "x": 1935,
+        "y": 321,
+        "w": 280,
+        "h": 60
+      },
+      "text": {
+        "content": "元素抗性",
+        "fontSize": 38,
+        "color": "#ffe9b0",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e45",
+      "order": 45
+    },
+    {
+      "id": "e47",
+      "name": "属性条 11",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1937,
+        "y": 434,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1935,
+        "y": 425,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e44",
+      "genLayer": 3,
+      "order": 46,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e48",
+      "name": "属性名 11",
+      "type": "text",
+      "rect": {
+        "x": 1950,
+        "y": 433,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "火抗",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e47",
+      "order": 47
+    },
+    {
+      "id": "e49",
+      "name": "属性值 11",
+      "type": "text",
+      "rect": {
+        "x": 2070,
+        "y": 433,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1600",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e47",
+      "order": 48
+    },
+    {
+      "id": "e50",
+      "name": "属性条 12",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1937,
+        "y": 569,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1935,
+        "y": 560,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e44",
+      "genLayer": 3,
+      "order": 49,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e51",
+      "name": "属性名 12",
+      "type": "text",
+      "rect": {
+        "x": 1950,
+        "y": 568,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "冰抗",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e50",
+      "order": 50
+    },
+    {
+      "id": "e52",
+      "name": "属性值 12",
+      "type": "text",
+      "rect": {
+        "x": 2070,
+        "y": 568,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1737",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e50",
+      "order": 51
+    },
+    {
+      "id": "e53",
+      "name": "属性条 13",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1937,
+        "y": 704,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1935,
+        "y": 695,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e44",
+      "genLayer": 3,
+      "order": 52,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e54",
+      "name": "属性名 13",
+      "type": "text",
+      "rect": {
+        "x": 1950,
+        "y": 703,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "雷抗",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e53",
+      "order": 53
+    },
+    {
+      "id": "e55",
+      "name": "属性值 13",
+      "type": "text",
+      "rect": {
+        "x": 2070,
+        "y": 703,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "1874",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e53",
+      "order": 54
+    },
+    {
+      "id": "e56",
+      "name": "属性条 14",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1937,
+        "y": 839,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1935,
+        "y": 830,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e44",
+      "genLayer": 3,
+      "order": 55,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e57",
+      "name": "属性名 14",
+      "type": "text",
+      "rect": {
+        "x": 1950,
+        "y": 838,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "光抗",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e56",
+      "order": 56
+    },
+    {
+      "id": "e58",
+      "name": "属性值 14",
+      "type": "text",
+      "rect": {
+        "x": 2070,
+        "y": 838,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "2011",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e56",
+      "order": 57
+    },
+    {
+      "id": "e59",
+      "name": "属性条 15",
+      "type": "bar",
+      "image": "slices/属性条_1.png",
+      "rect": {
+        "x": 1937,
+        "y": 974,
+        "w": 273,
+        "h": 53
+      },
+      "drawnRect": {
+        "x": 1935,
+        "y": 965,
+        "w": 280,
+        "h": 70
+      },
+      "parent": "e44",
+      "genLayer": 3,
+      "order": 58,
+      "sameAs": "e11"
+    },
+    {
+      "id": "e60",
+      "name": "属性名 15",
+      "type": "text",
+      "rect": {
+        "x": 1950,
+        "y": 973,
+        "w": 120,
+        "h": 54
+      },
+      "text": {
+        "content": "暗抗",
+        "fontSize": 34,
+        "color": "#ffffff",
+        "align": "left",
+        "bold": true
+      },
+      "parent": "e59",
+      "order": 59
+    },
+    {
+      "id": "e61",
+      "name": "属性值 15",
+      "type": "text",
+      "rect": {
+        "x": 2070,
+        "y": 973,
+        "w": 130,
+        "h": 54
+      },
+      "text": {
+        "content": "2148",
+        "fontSize": 34,
+        "color": "#ffe9b0",
+        "align": "right",
+        "bold": true
+      },
+      "parent": "e59",
+      "order": 60
+    },
+    {
+      "id": "e62",
+      "name": "升级",
+      "type": "button",
+      "image": "slices/升级.png",
+      "rect": {
+        "x": 1370,
+        "y": 1165,
+        "w": 275,
+        "h": 91
+      },
+      "drawnRect": {
+        "x": 1370,
+        "y": 1160,
+        "w": 280,
+        "h": 100
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 61,
+      "sameAs": null
+    },
+    {
+      "id": "e63",
+      "name": "升级文字",
+      "type": "text",
+      "rect": {
+        "x": 1400,
+        "y": 1180,
+        "w": 220,
+        "h": 60
+      },
+      "text": {
+        "content": "升级",
+        "fontSize": 40,
+        "color": "#ffffff",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e62",
+      "order": 62
+    },
+    {
+      "id": "e64",
+      "name": "装备",
+      "type": "button",
+      "image": "slices/升级.png",
+      "rect": {
+        "x": 1730,
+        "y": 1165,
+        "w": 275,
+        "h": 91
+      },
+      "drawnRect": {
+        "x": 1730,
+        "y": 1160,
+        "w": 280,
+        "h": 100
+      },
+      "parent": "e1",
+      "genLayer": 2,
+      "order": 63,
+      "sameAs": "e62"
+    },
+    {
+      "id": "e65",
+      "name": "装备文字",
+      "type": "text",
+      "rect": {
+        "x": 1760,
+        "y": 1180,
+        "w": 220,
+        "h": 60
+      },
+      "text": {
+        "content": "装备",
+        "fontSize": 40,
+        "color": "#ffffff",
+        "align": "center",
+        "bold": true
+      },
+      "parent": "e64",
+      "order": 64
+    }
+  ]
+}
