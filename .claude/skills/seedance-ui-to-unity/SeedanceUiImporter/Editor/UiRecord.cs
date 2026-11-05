@@ -1,4 +1,4 @@
-// 一个导入 Prefab 的结构记录（Assets/SeedanceUI/<Prefab 路径>.json）。重导靠它把节点和 layout.json 的元素对上，
+// 一个导入 Prefab 的结构记录（Assets/SeedanceKlab/UI/<Prefab 路径>.json）。重导靠它把节点和 layout.json 的元素对上，
 // 替代以前挂在节点上的标记组件——Prefab 上不挂任何 Seedance 脚本，工程里也不留 Seedance 代码。
 
 using System;

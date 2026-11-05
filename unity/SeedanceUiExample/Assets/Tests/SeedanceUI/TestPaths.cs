@@ -20,7 +20,7 @@ namespace Seedance.UiImport.Tests
         }
         /// <summary>测试产出的资源都放这里，各测试 TearDown 时删掉</summary>
         public const string OutDir = "Assets/_SeedanceUiTestOut";
-        /// <summary>OutDir 下 Prefab 的导入记录所在目录（Assets/SeedanceUI/ 镜像），各测试 TearDown 时一并删掉</summary>
-        public const string RecordOutDir = "Assets/SeedanceUI/_SeedanceUiTestOut";
+        /// <summary>OutDir 下 Prefab 的导入记录所在目录（Assets/SeedanceKlab/UI/ 镜像），各测试 TearDown 时一并删掉</summary>
+        public const string RecordOutDir = "Assets/SeedanceKlab/UI/_SeedanceUiTestOut";
     }
 }
