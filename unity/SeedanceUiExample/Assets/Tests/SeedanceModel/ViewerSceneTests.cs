@@ -14,6 +14,7 @@ namespace Seedance.ModelImport.Tests
         [TearDown]
         public void TearDown()
         {
+            ViewerScene.SaveScene = ViewerScene.DefaultSaveScene;
             AssetDatabase.DeleteAsset("Assets/Product");
             AssetDatabase.DeleteAsset(ModelTestPaths.OutDir);
             AssetDatabase.DeleteAsset(ModelTestPaths.RecordOutDir);
@@ -127,6 +128,59 @@ namespace Seedance.ModelImport.Tests
                 Assert.AreEqual(count, SceneManager.sceneCount);
             }
             finally { EditorSceneManager.CloseScene(user, true); }
+        }
+
+        [Test]
+        public void Show_SaveFails_WarnsInsteadOfThrowing()
+        {
+            ViewerScene.SaveScene = (scene, path) => false;
+            var report = new ModelImportReport();
+            Assert.DoesNotThrow(() => ViewerScene.Show(MakePrefab("A"), report));
+            Assert.IsTrue(string.IsNullOrEmpty(report.scenePath), "没保存成就不报场景路径");
+            Assert.AreEqual(1, report.warnings.Count);
+            StringAssert.Contains("3DViewer", report.warnings[0]);
+            Assert.IsFalse(SceneManager.GetSceneByPath(ViewerScene.ScenePath).isLoaded, "自己打开的场景失败后也要关掉");
+        }
+
+        [Test]
+        public void Show_OpenWithUnsavedEdits_PlacesButDoesNotSave()
+        {
+            ViewerScene.Show(MakePrefab("A"), new ModelImportReport());
+            var scene = EditorSceneManager.OpenScene(ViewerScene.ScenePath, OpenSceneMode.Additive);
+            try
+            {
+                var userEdit = new GameObject("UserEdit");
+                SceneManager.MoveGameObjectToScene(userEdit, scene);
+                EditorSceneManager.MarkSceneDirty(scene);
+                Assert.IsTrue(scene.isDirty);
+                var report = new ModelImportReport();
+                ViewerScene.Show(MakePrefab("B"), report);
+
+                var onDisk = File.ReadAllText(ViewerScene.ScenePath);
+                StringAssert.DoesNotContain("UserEdit", onDisk, "用户没保存的修改不能被我们存进去");
+                Assert.IsTrue(scene.isLoaded, "用户开着的场景不能被关掉");
+                Assert.IsTrue(scene.isDirty);
+                Assert.IsTrue(Instances(scene).Single(g => g.name == "B").activeSelf, "模型还是要在场景里放好");
+                Assert.AreEqual(ViewerScene.ScenePath, report.scenePath);
+                Assert.AreEqual(1, report.warnings.Count);
+                StringAssert.Contains("没保存", report.warnings[0]);
+            }
+            finally { EditorSceneManager.CloseScene(scene, true); }
+        }
+
+        [Test]
+        public void Show_OpenWithoutEdits_Saves()
+        {
+            ViewerScene.Show(MakePrefab("A"), new ModelImportReport());
+            var scene = EditorSceneManager.OpenScene(ViewerScene.ScenePath, OpenSceneMode.Additive);
+            try
+            {
+                var report = new ModelImportReport();
+                ViewerScene.Show(MakePrefab("B"), report);
+                Assert.IsFalse(scene.isDirty);
+                CollectionAssert.IsEmpty(report.warnings);
+            }
+            finally { EditorSceneManager.CloseScene(scene, true); }
         }
     }
 }

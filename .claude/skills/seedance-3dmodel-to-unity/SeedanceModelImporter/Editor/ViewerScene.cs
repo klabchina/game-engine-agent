@@ -2,6 +2,7 @@
 // 只让本次的那个显示（判断依据：实例的源 Prefab 有导入记录；程序手放的东西不碰），相机按它取景。
 // 以 Additive 打开、改完保存后关掉，不动用户当前打开的场景。Play 后模型从 Controller 的默认状态（idle）开始播。
 
+using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -14,19 +15,29 @@ namespace Seedance.ModelImport.Editor
     public static class ViewerScene
     {
         public const string ScenePath = "Assets/Product/Scene/3DViewer.unity";
+        internal static readonly Func<Scene, string, bool> DefaultSaveScene = (scene, path) => EditorSceneManager.SaveScene(scene, path);
+        /// <summary>测试替换用</summary>
+        internal static Func<Scene, string, bool> SaveScene = DefaultSaveScene;
         const string EmptySceneYaml = "%YAML 1.1\n%TAG !u! tag:unity3d.com,2011:\n";
 
+        /// <summary>
+        /// 把模型放进展示场景并保存。展示场景只是方便看，出任何问题都只记 warning、不让导入失败（Prefab 和记录这时都已经写好了）。
+        /// 用户自己开着这个场景且有没保存的修改时：照样放好模型，但不保存（否则会把用户的修改一起存掉），留给用户自己存。
+        /// </summary>
         public static void Show(GameObject prefabAsset, ModelImportReport report)
         {
-            var scene = SceneManager.GetSceneByPath(ScenePath);
+            var scene = default(Scene);
             var openedHere = false;
-            if (!scene.IsValid() || !scene.isLoaded)
-            {
-                scene = File.Exists(ScenePath) ? EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive) : CreateScene();
-                openedHere = true;
-            }
             try
             {
+                scene = SceneManager.GetSceneByPath(ScenePath);
+                if (!scene.IsValid() || !scene.isLoaded)
+                {
+                    scene = File.Exists(ScenePath) ? EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive) : CreateScene();
+                    openedHere = true;
+                }
+                var userEdits = !openedHere && scene.isDirty;
+
                 GameObject instance = null;
                 foreach (var go in scene.GetRootGameObjects())
                 {
@@ -45,12 +56,25 @@ namespace Seedance.ModelImport.Editor
                 var cam = scene.GetRootGameObjects().Select(g => g.GetComponentInChildren<Camera>(true)).FirstOrDefault(c => c != null);
                 if (cam != null) ViewFraming.Frame(cam, ViewFraming.Bounds(instance));
 
-                if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new ModelImportException($"保存展示场景失败：{ScenePath}");
+                if (userEdits)
+                {
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    report.warnings.Add($"展示场景 {ScenePath} 开着且有没保存的修改，模型已经放进去了但没保存（免得把你的修改一起存掉），需要的话自己保存");
+                }
+                else if (!SaveScene(scene, ScenePath))
+                {
+                    report.warnings.Add($"展示场景 {ScenePath} 保存失败，没更新；Prefab 和导入记录都已经好了，不影响使用");
+                    return;
+                }
                 report.scenePath = ScenePath;
+            }
+            catch (Exception ex)
+            {
+                report.warnings.Add($"展示场景 {ScenePath} 没更新成（{ex.Message}）；Prefab 和导入记录都已经好了，不影响使用");
             }
             finally
             {
-                if (openedHere) EditorSceneManager.CloseScene(scene, true);
+                if (openedHere && scene.IsValid() && scene.isLoaded) EditorSceneManager.CloseScene(scene, true);
             }
         }
 

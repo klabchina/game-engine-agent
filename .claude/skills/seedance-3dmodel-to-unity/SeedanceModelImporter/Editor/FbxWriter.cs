@@ -163,32 +163,40 @@ namespace Seedance.ModelImport.Editor
                 result.bones = smrs.SelectMany(s => s.bones).Where(b => b != null).Select(b => b.name)
                     .Distinct().OrderBy(n => n, StringComparer.Ordinal).ToList();
 
-                Bounds? bounds = null;
-                void Add(Vector3 p)
-                {
-                    if (bounds == null) bounds = new Bounds(p, Vector3.zero);
-                    else { var b = bounds.Value; b.Encapsulate(p); bounds = b; }
-                }
-                foreach (var smr in smrs)
-                {
-                    if (smr.sharedMesh == null) continue;
-                    var baked = new Mesh();
-                    smr.BakeMesh(baked, true);
-                    foreach (var v in baked.vertices) Add(smr.transform.TransformPoint(v));
-                    UnityEngine.Object.DestroyImmediate(baked);
-                }
-                foreach (var mf in go.GetComponentsInChildren<MeshFilter>(true))
-                {
-                    if (mf.sharedMesh == null || stray.Contains(mf.transform)) continue;
-                    foreach (var v in mf.sharedMesh.vertices) Add(mf.transform.TransformPoint(v));
-                }
-                result.heightMeters = bounds?.size.y ?? 0f;
+                result.heightMeters = MeasureHeight(go, stray);
 
                 var yaw = FacingYaw(go);
                 result.facingYaw = yaw ?? 0f;
                 if (yaw == null) result.warnings.Add("认不出模型朝向（找不到左右成对的骨骼），没有转；需要的话手动转 Model 子节点");
             }
             finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
+        /// <summary>模型在世界空间的高度（米）：蒙皮网格按当前姿势烘焙，stray 里的残留网格不算</summary>
+        internal static float MeasureHeight(GameObject go, ISet<Transform> stray)
+        {
+            Bounds? bounds = null;
+            void Add(Vector3 p)
+            {
+                if (bounds == null) bounds = new Bounds(p, Vector3.zero);
+                else { var b = bounds.Value; b.Encapsulate(p); bounds = b; }
+            }
+            foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (smr.sharedMesh == null) continue;
+                var baked = new Mesh();
+                // useScale = true：烘焙结果是 renderer 的局部空间（已除掉它自身的缩放），再 TransformPoint 正好乘一次缩放；
+                // 传 false 反而会把缩放算两次（MeasureHeight_ScaleAppliedOnce 测过）
+                smr.BakeMesh(baked, true);
+                foreach (var v in baked.vertices) Add(smr.transform.TransformPoint(v));
+                UnityEngine.Object.DestroyImmediate(baked);
+            }
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null || stray.Contains(mf.transform)) continue;
+                foreach (var v in mf.sharedMesh.vertices) Add(mf.transform.TransformPoint(v));
+            }
+            return bounds?.size.y ?? 0f;
         }
 
         /// <summary>

@@ -19,6 +19,42 @@ namespace Seedance.ModelImport.Tests
         static ModelImporter Importer => (ModelImporter)AssetImporter.GetAtPath(FbxPath);
         static ModelImporterClipAnimation Clip(string name) => Importer.clipAnimations.Single(c => c.name == name);
 
+        /// <summary>
+        /// 造一个真正蒙皮的单位方块（高 1，全部顶点绑在一根骨骼上，bindpose 按当前姿势算）：renderer 自身缩放 smrScale，父节点缩放 parentScale。
+        /// 没有骨骼的话 BakeMesh 不走蒙皮，测不出缩放问题。
+        /// </summary>
+        static GameObject ScaledSkinned(float smrScale, float parentScale)
+        {
+            var root = new GameObject("Root");
+            root.transform.localScale = Vector3.one * parentScale;
+            var bone = new GameObject("Bone").transform;
+            bone.SetParent(root.transform, false);
+            var body = new GameObject("Body", typeof(SkinnedMeshRenderer));
+            body.transform.SetParent(root.transform, false);
+            body.transform.localScale = Vector3.one * smrScale;
+            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var mesh = Object.Instantiate(cube.GetComponent<MeshFilter>().sharedMesh);
+            Object.DestroyImmediate(cube);
+            mesh.boneWeights = Enumerable.Repeat(new BoneWeight { boneIndex0 = 0, weight0 = 1f }, mesh.vertexCount).ToArray();
+            mesh.bindposes = new[] { bone.worldToLocalMatrix * body.transform.localToWorldMatrix };
+            var smr = body.GetComponent<SkinnedMeshRenderer>();
+            smr.sharedMesh = mesh;
+            smr.bones = new[] { bone };
+            smr.rootBone = bone;
+            return root;
+        }
+
+        [TestCase(1f, 1f, 1f)]
+        [TestCase(2f, 1f, 2f)]
+        [TestCase(0.01f, 100f, 1f)]
+        [TestCase(1f, 3f, 3f)]
+        public void MeasureHeight_ScaleAppliedOnce(float smrScale, float parentScale, float expected)
+        {
+            var go = ScaledSkinned(smrScale, parentScale);
+            try { Assert.AreEqual(expected, FbxWriter.MeasureHeight(go, new System.Collections.Generic.HashSet<Transform>()), 1e-3f); }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         [Test]
         public void First_ClipsNamedAndLooped()
         {
