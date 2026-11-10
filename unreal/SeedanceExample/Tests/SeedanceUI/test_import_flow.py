@@ -224,7 +224,7 @@ class FlowTests(unittest.TestCase):
     def test_preflight_bad_import_dir(self):
         req = request()
         req["importDir"] = "C:/Program Files/Git/Game/UI/X"
-        self.assertBlocked(req, "MSYS_NO_PATHCONV")
+        self.assertBlocked(req, "MSYS2_ARG_CONV_EXCL")
 
     def test_compile_failure_not_saved(self):
         self.fake.compile_ok = False

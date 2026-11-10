@@ -48,6 +48,25 @@
         "seedance",
         "unity-cli"
       ]
+    },
+    {
+      "name": "seedance-ui-to-unreal",
+      "description": "把 Seedance ui-maker 的 UI 产物（out/ 目录或 ui.zip）经 unreal-mcp 导入 Unreal 工程，生成 UMG Widget Blueprint；重导只更新贴图、位置与尺寸，工程里不留代码",
+      "version": "1.0.0",
+      "source": "./.claude/skills/seedance-ui-to-unreal",
+      "strict": false,
+      "skills": [
+        "./"
+      ],
+      "category": "development",
+      "keywords": [
+        "unreal",
+        "umg",
+        "widget-blueprint",
+        "seedance",
+        "ui-maker",
+        "mcp"
+      ]
     }
   ]
 }

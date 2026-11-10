@@ -26,7 +26,7 @@ def is_valid_wbp_name(s):
 def wbp_path(import_dir, wbp_name):
     d = (import_dir or "").replace("\\", "/").rstrip("/")
     if not d.startswith("/Game/"):
-        raise UiImportError("导入目录必须以 /Game/ 开头：%s（在 Git Bash 里调用要加 MSYS_NO_PATHCONV=1）" % import_dir)
+        raise UiImportError("导入目录必须以 /Game/ 开头：%s（在 Git Bash 里调用要加 MSYS2_ARG_CONV_EXCL='/Game/'）" % import_dir)
     name = wbp_name or d.rsplit("/", 1)[-1]
     if not is_valid_wbp_name(name):
         raise UiImportError("Widget Blueprint 名只能用英文字母、数字、_、-：%s%s"

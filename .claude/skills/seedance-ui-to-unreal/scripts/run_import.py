@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """seedance-ui-to-unreal 的本地启动器（只用标准库）。
 
-用法（Git Bash 里要加 MSYS_NO_PATHCONV=1，不然 /Game/... 会被改写）：
+用法（Git Bash 里要加 MSYS2_ARG_CONV_EXCL="/Game/"，不然 /Game/... 会被改写）：
     python run_import.py --source <ui.zip|out目录> --project <UE 工程目录> --import-dir /Game/UI/X
                          [--wbp-name X] [--font /Game/Fonts/F] [--capture <png>]
 stdout 只打印 ImportReport JSON；出错打印到 stderr。退出码：0 成功，1 导入错误，2 连接或环境错误。
@@ -46,7 +46,7 @@ class ToolError(Exception):
 # ---------- 产物 ----------
 
 def disk_path(p):
-    """Git Bash 风格的 /d/foo 换成 D:/foo（MSYS_NO_PATHCONV=1 时 Git Bash 不会替我们换）"""
+    """Git Bash 风格的 /d/foo 换成 D:/foo（设了 MSYS_NO_PATHCONV=1 时 Git Bash 不会替我们换）"""
     if p and len(p) >= 3 and p[0] == "/" and p[1].isalpha() and p[2] == "/":
         return p[1].upper() + ":" + p[2:]
     if p and len(p) == 2 and p[0] == "/" and p[1].isalpha():
@@ -112,7 +112,7 @@ def slice_hashes(layout, root):
 
 def check_import_dir(import_dir):
     if not (import_dir or "").replace("\\", "/").startswith("/Game/"):
-        raise InputError("导入目录必须以 /Game/ 开头：%s（在 Git Bash 里调用要加 MSYS_NO_PATHCONV=1）" % import_dir)
+        raise InputError("导入目录必须以 /Game/ 开头：%s（在 Git Bash 里调用要加 MSYS2_ARG_CONV_EXCL='/Game/'）" % import_dir)
 
 
 def record_disk_path(project, wbp):

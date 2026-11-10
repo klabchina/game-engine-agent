@@ -6,13 +6,44 @@
 - `unreal/` 下的二进制资源走 Git LFS（见根目录 `.gitattributes`）。
 - 编辑器打开工程时自动在 `http://127.0.0.1:8001/mcp` 启动 MCP 服务器（`Config/DefaultEditorPerProjectUserSettings.ini` 的 `bAutoStartServer` / `ServerPortNumber`）；地址也写在工程的 `.mcp.json`。没起来就在编辑器控制台敲 `ModelContextProtocol.StartServer 8001`。
 - 本机 Windows：`python3` 是应用商店占位程序（退出码 49），用 `python`；脚本里两个都试。
-- Git Bash 会把 `/Game/...` 这样的参数改写成 `C:/Program Files/Git/Game/...`，给命令传内容路径时加 `MSYS_NO_PATHCONV=1`。
+- Git Bash 会把 `/Game/...` 这样的参数改写成 `C:/Program Files/Git/Game/...`，给命令传内容路径时加 `MSYS2_ARG_CONV_EXCL="/Game/"`（只豁免 `/Game/` 开头的参数）。不要用 `MSYS_NO_PATHCONV=1`：它连 `/d/...` 这类文件路径也不转了，Windows 上的 Python 会找不到文件（脚本里要用就配合 `pwd -W` 取 Windows 路径，见 `run-tests.sh`）。
 
 ## 规则
 
 - 每次调用前确认 8001 端口属于目标工程的编辑器（`netstat -ano` 的 PID 对应 `UnrealEditor.exe` 窗口标题），本机可能同时开着别的工程。
 - 出错（连不上、超时、PIE 中）如实报告，不要循环重试、换别的编辑器，也不要手改 `.uasset`。
 - 工程里不留 Seedance 代码：导入逻辑放在 skill 目录，经 MCP 沙箱执行。
+
+## seedance-ui-to-unreal
+
+把 Seedance ui-maker 产物（`layout.json` + `slices/`，或 `ui.zip`）导入成 UMG Widget Blueprint。
+
+| 路径 | 内容 |
+|---|---|
+| `.claude/skills/seedance-ui-to-unreal/SKILL.md` | 导入步骤（用户可见行为以这里为准） |
+| `.claude/skills/seedance-ui-to-unreal/editor/seedance_ui/` | 导入逻辑（**唯一真源**）。`errors` `layout` `naming` `geometry` `record` `planner` 是纯逻辑；`tools` 是唯一调用 MCP 工具的地方；`apply` 执行计划；`main.run()` 是沙箱入口 |
+| `.claude/skills/seedance-ui-to-unreal/scripts/run_import.py` | 本地启动器：解压、检查切图与记录、核对编辑器工程、拼脚本经 MCP HTTP 执行、写导入记录、截图 |
+| `unreal/SeedanceExample/Tests/SeedanceUI/` | `unittest` 离线单测（`fake_editor.py` 在 `execute_tool` 层模拟 MCP 工具）与 `e2e_check.py` |
+| `unreal/SeedanceExample/TestFixtures/` | 测试用产物 `ui-popup.zip`、`ui-status.zip`（LFS） |
+| `docs/superpowers/specs/2026-11-10-seedance-ui-to-unreal-design.md` | 设计 |
+
+### 约定
+
+- **沙箱限制**：`editor/seedance_ui/*.py` 只许 `import json, re, math`；包内引用一律写成**单独一行** `from .<模块> import ...`（启动器拼接时整行删掉），模块之间不许有同名顶层名字（`test_launcher` 会检查）。`main.py` 的 `REQUEST = None` 会被拼在末尾的真实 `REQUEST` 覆盖。
+- **工具报错无法捕获**：会写东西之前的检查只用不会抛错的工具（`exists`、`can_edit_asset`、`IsPIERunning`）；导入记录的读写放在启动器（本地磁盘），沙箱只返回 `recordText`。
+- 贴图不能原地覆盖导入：哈希没变不动；变了且只被本 WBP 引用才删掉同名重导；有外部引用就跳过并警告。
+- 改导入规则时，`SKILL.md`、设计文档、本文件一起更新。
+- 工程里不留 Seedance 代码；测试工程里手动导入的产物与记录用完要删（`/Game/Tests/`、`Content/SeedanceKlab/UI/Tests/` 不提交）。
+
+### 测试
+
+```bash
+bash unreal/SeedanceExample/run-tests.sh                 # 离线单测（不用开编辑器），约 3 秒
+bash unreal/SeedanceExample/run-tests.sh test_planner_update   # 只跑一个模块
+bash unreal/SeedanceExample/run-e2e.sh [截图目录]         # 端到端：编辑器开着，约 3.5 分钟
+```
+
+端到端会导入两个产物到 `/Game/Tests/SeedanceUI/`、断言坐标 / 字号、模拟程序改名与手加控件后重导，并把截图与两个 `preview.png` 放进截图目录供人眼对照，最后清理。
 
 ## MCP 工具速查（2026-11-10 实测）
 

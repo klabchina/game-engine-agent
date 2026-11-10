@@ -17,7 +17,7 @@
 动到某个引擎相关的代码前，先读对应文档：
 
 - Unity：`docs/engine/unity.md`（CLI 规则、seedance-ui-to-unity 与 seedance-3dmodel-to-unity 的约定与测试）
-- Unreal：skill 尚未开始。开发 / 测试工程是 `unreal/SeedanceExample/`（UE 5.8，纯蓝图，启用了 ModelContextProtocol 与 AllToolsets 插件；编辑器开着时 MCP 在 `http://127.0.0.1:8001/mcp`）。`unreal/` 下的二进制资源走 Git LFS（见 `.gitattributes`），clone 前要装 Git LFS
+- Unreal：`docs/engine/unreal.md`（MCP 规则与工具速查、seedance-ui-to-unreal 的约定与测试）。开发 / 测试工程 `unreal/SeedanceExample/`；`unreal/` 下的二进制资源走 Git LFS，clone 前要装 Git LFS
 
 ## 约定
 

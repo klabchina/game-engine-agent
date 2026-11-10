@@ -148,7 +148,7 @@ class LauncherTests(unittest.TestCase):
     def test_rejects_mangled_import_dir(self):
         with self.assertRaises(run_import.LauncherError) as cm:
             run_import.check_import_dir("C:/Program Files/Git/Game/UI/X")
-        self.assertIn("MSYS_NO_PATHCONV", str(cm.exception))
+        self.assertIn("MSYS2_ARG_CONV_EXCL", str(cm.exception))
         run_import.check_import_dir("/Game/UI/X")
 
 
