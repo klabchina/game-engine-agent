@@ -14,7 +14,8 @@ ui-maker 的产物（透明切图 + `layout.json`）经 unreal-mcp 导成 UMG Wi
 - 资源与控件一律 ASCII 命名，贴图 `<导入目录>/Textures/T_<type>_<id>`；中文名存在导入记录的 `sourceName`。
 - 导入记录：`<工程>/Content/SeedanceKlab/UI/<WBP 路径去掉 /Game/>.json`，随工程提交（UE 不会把 .json 当资产，不进包）。
 - 重导只更新 **贴图、位置、尺寸**；文字、同级顺序、显隐、程序加的控件和蓝图都不碰。按控件名认节点：容器名或显示控件名有一个没改就认得出（新名字写回记录）。产物里没了的元素设 `Collapsed`，不删。
-- 切图内容没变（SHA-256 相同）就不动贴图；变了且只被本 WBP 引用 → 删掉同名重导；还被别的资产引用 → 不替换，进 `warnings`。
+- 切图内容没变（SHA-256 相同）就不动贴图；变了且没有别人引用 → 删掉同名重导并立刻保存；还被别的资产、或本 WBP 里程序手加 / 已隐藏的控件引用 → 不替换（替换会清空这些引用），进 `warnings`。
+- 一个导入目录只放一套 UI（贴图按元素 id 命名，不同产物会撞名）；目录里已有别的 `WBP_*` 时导入会报错停下。
 - 字体默认引擎字体（中文走引擎自带后备字体）；可传工程里的字体资产。
 
 `SKILL_DIR` = 本文件所在目录。
@@ -25,7 +26,7 @@ ui-maker 的产物（透明切图 + `layout.json`）经 unreal-mcp 导成 UMG Wi
 |---|---|---|
 | `SOURCE` | 是 | 任务的 `out/` 目录或 `ui.zip`，绝对路径 |
 | `PROJECT` | 是 | UE 工程目录（含 `.uproject`、`.mcp.json`），绝对路径 |
-| `IMPORT_DIR` | 是 | `/Game/` 开头，如 `/Game/UI/Generated/CharacterPanel` |
+| `IMPORT_DIR` | 是 | `/Game/` 开头，如 `/Game/UI/Generated/CharacterPanel`；每套 UI 一个目录 |
 | `WBP_NAME` | 否 | 只能英文字母、数字、`_`、`-`；资产名为 `WBP_<WBP_NAME>`；不给取 `IMPORT_DIR` 最后一级（那一级是中文就必须给） |
 | `FONT` | 否 | 工程里现成的字体资产路径，如 `/Game/Fonts/NotoSansSC` |
 
@@ -66,7 +67,8 @@ ui-maker 的产物（透明切图 + `layout.json`）经 unreal-mcp 导成 UMG Wi
 - 「已存在但找不到它的导入记录」「有导入记录但 Widget Blueprint 不在了」：能从版本库恢复最好；否则删掉 WBP（和记录）再导入会按首次导入重建，**程序加的内容会丢**，先问用户。
 - 「导入记录是只读的」「不能编辑」：多半是版本管理没 checkout，请用户 checkout 后重跑。
 - 「Widget Blueprint 已保存，但导入记录没写成」：**不要直接重导**（会把新控件再建一份）；排除原因后从版本库恢复 WBP 再导。
-- 编辑器里的脚本报错（stderr 是 `line N: ...` 加 Traceback）：照实贴给用户；这时 WBP 没有保存，编辑器里可能有未保存的改动，请用户不要保存、关掉 WBP 编辑器后重试或回报问题。
+- 「现在就编译不过」：WBP 的蓝图图表本来就有错，请程序先修好；这时什么都还没写。
+- 编辑器里的脚本报错（stderr 是 `line N: ...` 加 Traceback）：照实贴给用户。这时 WBP 没有保存（已导入的贴图已保存，磁盘上不缺图），但编辑器**内存里**有改了一半的 WBP——只关 WBP 编辑器不够，重试会撞上半成品。请用户**重启编辑器、提示保存时选不保存**，再重跑。
 
 ## Common Mistakes
 

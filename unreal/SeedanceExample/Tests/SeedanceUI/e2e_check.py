@@ -104,6 +104,23 @@ def main():
     p = widget_props(client, STATUS, "text_e3_Text", [], ["text", "font"])
     check(p["w"]["text"] == "角色属性", "text_e3_Text 文字 %s" % p["w"]["text"])
     check(abs(p["w"]["font"]["size"] - e3["text"]["fontSize"] * 0.75) < 0.01, "text_e3_Text 字号 %s" % p["w"]["font"]["size"])
+    # 真实编辑器上跑 tools.widget_texture_refs（贴图替换前查本 WBP 内引用要靠它）
+    src = []
+    for mod in ("errors", "tools"):
+        with open(os.path.join(SKILL, "editor", "seedance_ui", mod + ".py"), encoding="utf-8") as f:
+            src.append("\n".join(l for l in f.read().splitlines() if not l.startswith("from .")))
+    src.append("def run():\n    return {'refs': sorted(widget_texture_refs(%r, 'button_e62_Button', '/Script/UMG.Button'))}\n" % STATUS)
+    refs = json.loads(client.call_tool(SANDBOX[0], SANDBOX[1], {"script": "\n".join(src)}))["refs"]
+    check("/Game/Tests/SeedanceUI/Status/Textures/T_button_e62.T_button_e62" in refs, "widget_texture_refs 读到按钮贴图 %s" % refs)
+    # 同一导入目录再导一套别的 UI 要被拦下
+    try:
+        args = argparse.Namespace(source=os.path.join(PROJECT, "TestFixtures", "ui-popup.zip"), project=PROJECT,
+                                  import_dir=ROOT + "/Status", wbp_name="Other", font="", capture="")
+        ri.import_ui(args)
+        check(False, "同目录第二套 UI 应被拦下")
+    except ri.ToolError as ex:
+        check("只放一套 UI" in str(ex), "同目录第二套 UI 被拦下")
+
     p = widget_props(client, STATUS, "SizeBox", [], ["widthOverride", "heightOverride"])
     check((p["w"]["widthOverride"], p["w"]["heightOverride"]) == (2560, 1440), "SizeBox %s" % p["w"])
 

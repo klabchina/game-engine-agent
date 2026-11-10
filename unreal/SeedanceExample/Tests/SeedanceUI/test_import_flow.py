@@ -169,6 +169,51 @@ class FlowTests(unittest.TestCase):
         self.assertTrue(any("T_button_e62" in w and "WBP_Other" in w for w in out2["report"]["warnings"]))
         self.assertEqual(load_record(out2["recordText"], WBP)["textures"]["T_button_e62"], "h-slices/升级.png")
 
+    def test_texture_changed_manual_widget_ref_skipped(self):
+        """I1：本 WBP 里程序手加的控件也引用这张贴图时，不能删了重导（会把它的笔刷清空）"""
+        out = self.first()
+        t = self.fake.wbp(WBP)
+        name = t.add("/Script/UMG.Image", "MyImg", "panel_e1", -1)
+        t.props[name]["brush"] = {"resourceObject": {"refPath": "/Game/Tests/X/Textures/T_button_e62.T_button_e62"}}
+        req = request(record_text=out["recordText"])
+        req["hashes"]["slices/升级.png"] = "new"
+        out2 = self.run_import(req)
+        self.assertEqual(self.fake.count("delete"), 0)
+        self.assertEqual(t.props["MyImg"]["brush"]["resourceObject"]["refPath"],
+                         "/Game/Tests/X/Textures/T_button_e62.T_button_e62")
+        self.assertTrue(any("T_button_e62" in w and "MyImg" in w for w in out2["report"]["warnings"]))
+        self.assertEqual(load_record(out2["recordText"], WBP)["textures"]["T_button_e62"], "h-slices/升级.png")
+
+    def test_compile_preflight_blocks_existing_wbp(self):
+        """I2：已有 WBP 编译不过（程序的图表有错）就在写任何东西之前停下"""
+        out = self.first()
+        self.fake.calls.clear()
+        self.fake.compile_ok = False
+        req = request(record_text=out["recordText"])
+        req["hashes"]["slices/升级.png"] = "new"
+        with self.assertRaises(UiImportError) as cm:
+            self.run_import(req)
+        self.assertIn("编译", str(cm.exception))
+        self.assertEqual(self.fake.count("delete"), 0)
+        self.assertEqual(self.fake.count("AddWidget") + self.fake.count("set_properties") + self.fake.count("import_file"), 0)
+
+    def test_replaced_texture_saved_immediately(self):
+        """I2：删掉重导的贴图立刻保存，后面出错时磁盘上也不会少这张贴图"""
+        out = self.first()
+        req = request(record_text=out["recordText"])
+        req["hashes"]["slices/升级.png"] = "new"
+        self.fake.saved.clear()
+        self.run_import(req)
+        self.assertEqual(self.fake.saved[0], ["/Game/Tests/X/Textures/T_button_e62"])
+
+    def test_second_wbp_in_same_dir_blocked(self):
+        """I3：一个导入目录只放一个 UI（贴图名只由元素 id 决定，不同产物会撞名）"""
+        self.first()
+        self.fake.calls.clear()
+        req = request("ui-popup")
+        req["wbpName"] = "Other"
+        self.assertBlocked(req, "/Game/Tests/X", "WBP_X")
+
     def test_bold_without_bold_face_warns(self):
         self.fake.assets["/Game/F/MyFont"] = {"class": "Font", "props": {}}
         self.fake.font_faces["/Game/F/MyFont"] = ["Regular"]
@@ -230,7 +275,8 @@ class FlowTests(unittest.TestCase):
         self.fake.compile_ok = False
         with self.assertRaises(UiImportError):
             self.first()
-        self.assertEqual(self.fake.saved, [])
+        # 贴图导完就保存（磁盘上不缺图）；WBP 不保存
+        self.assertNotIn(WBP, [p for batch in self.fake.saved for p in batch])
 
 
 if __name__ == "__main__":

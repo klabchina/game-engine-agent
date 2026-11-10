@@ -240,7 +240,12 @@ class FakeEditor:
         if "compositeFont" in properties:
             faces = self.font_faces.get(path, ["Regular"])
             return json.dumps({"compositeFont": {"defaultTypeface": {"fonts": [{"name": f} for f in faces]}}})
-        raise RuntimeError("FakeEditor: get_properties 只模拟了 compositeFont")
+        ref = instance["refPath"]
+        if ":WidgetTree." in ref:
+            t = self.wbps[path]
+            name = ref.split(":WidgetTree.", 1)[1]
+            return json.dumps({p: t.props[name].get(p) for p in properties})
+        raise RuntimeError("FakeEditor: get_properties 只模拟了 compositeFont 与控件属性")
 
     def t_CompileWidgetBlueprint(self, widgetBlueprint):
         return self.compile_ok

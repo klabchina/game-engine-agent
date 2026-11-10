@@ -133,6 +133,29 @@ def set_slot(wbp, name, values):
         raise UiImportError("设置控件 %s 的槽属性失败：%s" % (name, ", ".join(sorted(values))))
 
 
+BRUSH_PROPERTIES = {"/Script/UMG.Image": "brush", "/Script/UMG.Button": "widgetStyle",
+                    "/Script/UMG.CheckBox": "widgetStyle", "/Script/UMG.ProgressBar": "widgetStyle"}
+
+
+def widget_texture_refs(wbp, name, cls):
+    """控件笔刷 / 样式里引用的对象路径集合（非笔刷类控件返回空集）"""
+    prop = BRUSH_PROPERTIES.get(cls)
+    if prop is None:
+        return set()
+    values = json.loads(call(T_OBJECT + "get_properties", instance=widget_ref(wbp, name), properties=[prop]))
+    found = set()
+    stack = [values]
+    while stack:
+        v = stack.pop()
+        if isinstance(v, dict):
+            if isinstance(v.get("refPath"), str):
+                found.add(v["refPath"])
+            stack.extend(v.values())
+        elif isinstance(v, list):
+            stack.extend(v)
+    return found
+
+
 def compile_wbp(wbp):
     if not call(T_UMG + "CompileWidgetBlueprint", widgetBlueprint={"refPath": object_path(wbp)}):
         raise UiImportError("Widget Blueprint 编译失败：%s（没有保存）" % wbp)

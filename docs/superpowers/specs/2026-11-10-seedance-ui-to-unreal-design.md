@@ -97,7 +97,7 @@ Root            CanvasPanel
 - 设置：`CompressionSettings = UserInterface2D`、`LODGroup = UI`、`MipGenSettings = NoMipmaps`。
 - 重导时贴图怎么更新（2026-11-10 V1 验证后由用户定）：MCP 的 `TextureTools.import_file` 遇到同名资产直接报错，不能原地覆盖；`AssetTools.delete` 会强删并把内存里所有引用清空。所以：
   - 启动器算每张切图文件的 SHA-256，记录里存「贴图名 → 哈希」。哈希没变：不碰贴图。
-  - 哈希变了（或贴图存在但记录里没有它的哈希）：查引用者（`AssetTools.get_referencers`）。只有本 Widget Blueprint 引用（或没人引用）→ 删除、同名重新导入、重设导入设置，并给所有用它的显示控件重设笔刷；还有别的资产引用 → 不动这张贴图，`warnings` 里列出「T_xxx 被 <资产> 引用，切图已更新但没有替换，请手动处理」，记录里保留旧哈希（下次重导还会提示）。
+  - 哈希变了（或贴图存在但记录里没有它的哈希）：查引用者（`AssetTools.get_referencers`）。没有别人引用（别的资产都不引用，本 WBP 里引用它的也只有本次会重设笔刷的显示控件）→ 删除、同名重新导入、重设导入设置并**立刻保存**，再给用它的显示控件重设笔刷；还有别的资产引用、或本 WBP 里程序手加 / 已隐藏的控件引用（2026-11-10 终审补充）→ 不动这张贴图，`warnings` 里列出「T_xxx 被 <资产> 引用，切图已更新但没有替换，请手动处理」，记录里保留旧哈希（下次重导还会提示）。
   - 引用永远不会被悄悄清空。
 - 本次产物用不到的贴图不删，报告 `orphanTextures`。
 
@@ -144,6 +144,8 @@ UMG 控件没有 Unity fileID 那样的稳定 id，只能按控件名认：
 - 记录里没有的控件（手加的）：完全不碰。
 
 ### 先检查后写入
+
+2026-11-10 终审补充：导入目录里已有别的 `WBP_*` 就报错（一个导入目录只放一套 UI，贴图按元素 id 命名会撞名）；已有 WBP 先编译一次，编译不过就报错（程序图表本来有错时，不要导到一半才失败）。
 
 脚本在写任何东西之前完成全部检查，任何一项不过就抛中文错误、什么都不写：
 
@@ -208,7 +210,7 @@ UMG 控件没有 Unity fileID 那样的稳定 id，只能按控件名认：
 
 ### 测试
 
-- **离线单测**：`unreal/SeedanceExample/Tests/SeedanceUI/`，pytest。直接 import 沙箱脚本，用假的 `execute_tool`（内存里模拟控件树、贴图、文件）。覆盖：layout 解析与校验、坐标与字号换算、命名、重导（改名找回、被挪走、删除重建、手加不碰、missing 补图、deactivate 后恢复）、先检查后写入、记录读写。不需要开编辑器。
+- **离线单测**：`unreal/SeedanceExample/Tests/SeedanceUI/`，unittest（本机没有 pytest，实现时改用标准库）。直接 import 沙箱脚本，用假的 `execute_tool`（内存里模拟控件树、贴图、文件）。覆盖：layout 解析与校验、坐标与字号换算、命名、重导（改名找回、被挪走、删除重建、手加不碰、missing 补图、deactivate 后恢复）、先检查后写入、记录读写。不需要开编辑器。
 - **端到端**：`unreal/SeedanceExample/run-e2e.sh`，编辑器开着时用两个真实产物导入到 `/Game/Tests/SeedanceUI/`，经 MCP 读回控件树断言结构、坐标、贴图引用；再改名一个显示控件、手加一个控件、重导，确认都保留且没有重复节点。跑完删除 `/Game/Tests/SeedanceUI/` 和对应记录。
 - **测试数据**：`ui-popup.zip`、`ui-status.zip` 放到 `unreal/SeedanceExample/TestFixtures/`；`.gitattributes` 给 `unreal/**/*.zip` 加 LFS。
 

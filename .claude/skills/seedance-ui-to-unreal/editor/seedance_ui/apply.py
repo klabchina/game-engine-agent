@@ -5,7 +5,7 @@ from .errors import UiImportError
 from .naming import CONTAINER_CLASS, texture_folder
 from .geometry import font_size, justification, parse_color, text_anchor
 from .planner import CONTAINER_VISIBILITY, label
-from .tools import add_widget, asset_class, asset_exists, can_edit, delete_asset, import_texture, is_pie_running, move_widget, object_path, referencers, set_slot, set_widget  # noqa: E501
+from .tools import BRUSH_PROPERTIES, add_widget, asset_class, asset_exists, can_edit, compile_wbp, delete_asset, import_texture, is_pie_running, list_assets, move_widget, object_path, referencers, save_assets, set_slot, set_widget, widget_texture_refs  # noqa: E501
 
 HOVER_TINT = 1.1
 PRESS_TINT = 0.85
@@ -32,6 +32,11 @@ def textures_to_replace(import_dir, textures):
 def preflight(wbp, wbp_exists, record, font):
     if is_pie_running():
         raise UiImportError("编辑器正在 PIE（运行游戏），先停止再导入；这时什么都还没写")
+    folder = wbp.rsplit("/", 1)[0]
+    others = [a for a in list_assets(folder) if a.rsplit("/", 1)[-1].startswith("WBP_") and a != wbp]
+    if others:
+        raise UiImportError("导入目录 %s 里已经有别的 UI（%s）。一个导入目录只放一套 UI（贴图按元素 id 命名，不同产物会撞名），"
+                            "换一个导入目录" % (folder, "、".join(others)))
     if wbp_exists and record is None:
         raise UiImportError("%s 已存在但找不到它的导入记录。删掉这个 Widget Blueprint 再导入会按首次导入重建（程序加的内容会丢）" % wbp)
     if record is not None and not wbp_exists:
@@ -42,31 +47,53 @@ def preflight(wbp, wbp_exists, record, font):
         raise UiImportError("%s 不能编辑（可能需要先在版本管理里 checkout）；这时什么都还没写" % wbp)
 
 
+def compile_check(wbp):
+    """已有 WBP 先编译一次：程序的图表本来就编译不过的话，导入到最后才失败会留下改了一半的 WBP"""
+    try:
+        compile_wbp(wbp)
+    except UiImportError:
+        raise UiImportError("%s 现在就编译不过（多半是蓝图图表里有错），先修好再导入；这时什么都还没写" % wbp)
+
+
 def check_textures_editable(paths):
     locked = [p for p in paths if not can_edit(p)]
     if locked:
         raise UiImportError("这些贴图不能编辑（可能需要先 checkout）：%s；这时什么都还没写" % "、".join(locked))
 
 
-def update_textures(import_dir, wbp, textures, record, report, slice_root):
-    """导入新贴图 / 替换内容变了的贴图。有外部引用的不替换，记录保留旧哈希。返回导入或替换过的资产路径"""
-    touched = []
+def update_textures(import_dir, wbp, textures, record, report, slice_root, tree, own_views):
+    """导入新贴图 / 替换内容变了的贴图，每张导完立刻保存（删掉的贴图不会在磁盘上缺着）。
+    替换要先删除，删除会清空所有引用，所以只要还有别人引用就不替换，记录保留旧哈希：
+    别的资产引用，或本 WBP 里本次不会重设笔刷的控件（程序手加的、已隐藏的元素）引用。"""
     folder = texture_folder(import_dir)
+    refs_cache = {}
+
+    def local_users(path):
+        target = object_path(path)
+        users = []
+        for name, w in sorted(tree.items()):
+            if name in own_views or w["class"] not in BRUSH_PROPERTIES:
+                continue
+            if name not in refs_cache:
+                refs_cache[name] = widget_texture_refs(wbp, name, w["class"])
+            if target in refs_cache[name]:
+                users.append(name)
+        return users
+
     for t in textures:
         path = texture_path(import_dir, t["name"])
-        source = t["source_image"]
         if asset_exists(path):
             if t.get("previous_hash") is not None and t["previous_hash"] == t["hash"]:
                 continue
-            others = [r for r in referencers(path) if r != wbp]
-            if others:
-                report["warnings"].append("%s 被 %s 引用，切图已更新但没有替换，请手动处理" % (t["name"], "、".join(others)))
+            users = [r for r in referencers(path) if r != wbp] + local_users(path)
+            if users:
+                report["warnings"].append("%s 还被 %s 引用，切图已更新但没有替换（替换会清空这些引用），请手动处理"
+                                          % (t["name"], "、".join(users)))
                 record["textures"][t["name"]] = t.get("previous_hash")
                 continue
             delete_asset(path)
-        import_texture(folder, t["name"], "%s/%s" % (slice_root.rstrip("/"), source))
-        touched.append(path)
-    return touched
+        import_texture(folder, t["name"], "%s/%s" % (slice_root.rstrip("/"), t["source_image"]))
+        save_assets([path])
 
 
 
