@@ -2,7 +2,7 @@
 # seedance-ui-to-unreal 的离线单测（不需要开编辑器）。用法：run-tests.sh [测试模块名，如 test_layout]
 # 退出码：0 全过，非 0 有失败。
 set -uo pipefail
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd "$(dirname "$0")" && (pwd -W 2>/dev/null || pwd))"
 EDITOR_SRC="$DIR/../../.claude/skills/seedance-ui-to-unreal/editor"
 PY=python
 "$PY" -c "" 2>/dev/null || PY=python3
