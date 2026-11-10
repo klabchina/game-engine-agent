@@ -1,0 +1,11 @@
+# 引擎生成的目录，可随时重建
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+# IDE
+.vs/
+.idea/
+*.sln
+*.VC.db
+*.VC.opendb

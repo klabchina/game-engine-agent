@@ -1,0 +1,8 @@
+# Unreal 工程的二进制资源走 Git LFS（只限 unreal/，Unity 工程里已提交的文件不受影响）
+unreal/**/*.uasset filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.umap filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.png filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.locres filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.archive filter=lfs diff=lfs merge=lfs -text
