@@ -152,8 +152,8 @@ git commit -m "feat: seedance-ui-to-unreal 包骨架与 layout.json 解析"
 **Interfaces:**
 - Consumes：Task 2、3
 - Produces：
-  - `record.py`：`new_record(wbp_path, doc) -> dict`；`dump_record(rec) -> str`（`json.dumps(indent=2, ensure_ascii=False, sort_keys=True)`，元素按 layout 顺序再接已不在产物里的）；`load_record(text, wbp_path) -> dict`（解析失败、`formatVersion` 不是 1、`widgetBlueprint` 不符都抛中文 `UiImportError`）。元素条目字段：`elementId, container, view, sourceName, type, layoutParentId`（根为 `"<root>"`）、`missingAtCreate: bool`。
-  - `planner.py`：`plan(doc, record|None, tree|None, font|None) -> Plan`。`Plan = {"ops": [Op...], "report": {...}, "record": dict}`。`tree` 是 Task 7 `read_tree()` 的结果：`{name: {"class": str, "parent": str|None, "index": int}}`。`Op` 为 dict，`op` 字段取值：`ensure_root`、`add_container`（`name, parent, index, offsets`）、`add_view`（`name, container, cls, element`）、`set_offsets`（`name, offsets`）、`set_size`（`name, w, h`）、`set_texture`（`view, texture, w, h`）、`move`（`name, parent, index`）、`set_visibility`（`name, value`）。贴图导入不进 ops，由 `plan["textures"] = [{name, source_image, elements:[id]}]` 给出。
+  - `record.py`：`new_record(wbp_path, doc) -> dict`（含 `textures: {贴图名: sha256}`，见 Task 1 后的贴图规则）；`dump_record(rec) -> str`（`json.dumps(indent=2, ensure_ascii=False, sort_keys=True)`，元素按 layout 顺序再接已不在产物里的）；`load_record(text, wbp_path) -> dict`（解析失败、`formatVersion` 不是 1、`widgetBlueprint` 不符都抛中文 `UiImportError`）。元素条目字段：`elementId, container, view, sourceName, type, layoutParentId`（根为 `"<root>"`）、`missingAtCreate: bool`。
+  - `planner.py`：`plan(doc, record|None, tree|None, font|None) -> Plan`。`Plan = {"ops": [Op...], "report": {...}, "record": dict}`。`tree` 是 Task 7 `read_tree()` 的结果：`{name: {"class": str, "parent": str|None, "index": int}}`。`Op` 为 dict，`op` 字段取值：`ensure_root`、`add_container`（`name, parent, index, offsets`）、`add_view`（`name, container, cls, element`）、`set_offsets`（`name, offsets`）、`set_size`（`name, w, h`）、`set_texture`（`view, texture, w, h`）、`move`（`name, parent, index`）、`set_visibility`（`name, value`）。贴图导入不进 ops，由 `plan["textures"] = [{name, source_image, hash, elements:[id]}]` 给出；`plan(...)` 多一个参数 `hashes: {source_image: sha256}`（启动器算好放进 REQUEST）。哪些贴图要删重导 / 跳过由 Task 7 的 `apply` 结合引用者决定：记录里哈希相同 → 不动；不同或缺失 → 只被本 WBP 引用（或无人引用）则 `delete` + `import_texture` + `set_texture_settings` + 对用它的显示控件补 `set_texture`；有外部引用则跳过并警告、记录保留旧哈希。
 
 - [ ] **Step 1：写失败测试**
   - `test_record_roundtrip`、`test_record_rejects_unknown_format_version`、`test_record_rejects_other_wbp`、`test_record_rejects_garbage`
@@ -211,7 +211,7 @@ git commit -m "feat: seedance-ui-to-unreal 包骨架与 layout.json 解析"
 - Produces（`tools.py`，每个函数只做一次或少量 `execute_tool` 调用，返回 Python 值；失败抛 `UiImportError` 并带工具名）：
   - `is_pie_running() -> bool`、`asset_exists(path) -> bool`、`can_edit(path) -> bool`、`load_font(path) -> bool`、`font_typefaces(path|None) -> [str]`（None = 引擎默认字体）
   - `read_text(path) -> str|None`、`write_text(path, text)`
-  - `import_texture(folder, name, source_file) -> str`（返回资产路径）、`set_texture_settings(path)`、`texture_size(path) -> (w, h)`、`list_textures(folder) -> [path]`
+  - `import_texture(folder, name, source_file) -> str`（返回资产路径）、`set_texture_settings(path)`、`texture_size(path) -> (w, h)`、`list_textures(folder) -> [path]`、`referencers(path) -> [包路径]`、`delete_asset(path) -> None`
   - `create_wbp(folder, name) -> str`、`read_tree(wbp) -> {name: {class, parent, index}}`
   - `add_widget(wbp, cls, name, parent|None, index) -> None`、`move_widget(wbp, name, parent, index)`
   - `set_slot(wbp, name, slot_values: dict)`、`set_widget(wbp, name, values: dict)`
@@ -235,13 +235,16 @@ git commit -m "feat: seedance-ui-to-unreal 包骨架与 layout.json 解析"
 **Interfaces:**
 - Consumes：Task 2～6
 - Produces：
-  - `main.run() -> dict`：读全局 `REQUEST = {"importDir", "wbpName", "font", "layoutJson", "sliceRoot"}`（`sliceRoot` 是本地解压目录的绝对路径，用 `/` 分隔），返回 ImportReport dict；`UiImportError` 不吞，由沙箱原样抛出。
+  - `main.run() -> dict`：读全局 `REQUEST = {"importDir", "wbpName", "font", "layoutJson", "sliceRoot", "hashes"}`（`hashes` = `{layout 里的 image 相对路径: sha256}`，启动器算）（`sliceRoot` 是本地解压目录的绝对路径，用 `/` 分隔），返回 ImportReport dict；`UiImportError` 不吞，由沙箱原样抛出。
   - `apply.preflight(...)`：设计「先检查后写入」一节全部条目（PIE、记录存在 / 可解析 / 与 WBP 存在性一致、`FONT` 可加载、WBP 与已存在贴图 `can_edit`）。
   - `apply.execute(plan, wbp, ...)`：顺序 = 导入贴图并设置 → 建 / 读 WBP → 执行 ops → `compile_wbp` → `save` → 写记录；记录写失败抛「Widget Blueprint 已保存，但导入记录没写成……不要直接重导」。
 
 - [ ] **Step 1：写失败测试**（`FakeEditor` + ui-status / ui-popup）
   - `test_first_import_ui_popup` / `test_first_import_ui_status`：报告 `created` 数正确；假编辑器里 WBP 树有 `Root/ScaleBox/SizeBox/Design`；`SizeBox` 宽高 = 2560×1440；记录文件写在 `/Game/SeedanceKlab/UI/Tests/X/WBP_X.json`；容器 `Visibility = SelfHitTestInvisible`、Image / TextBlock 为 `HitTestInvisible`、Button 不设；`button_e62_Button` 的 Hovered 着色 1.1、Pressed 0.85
   - `test_bold_without_bold_face_warns`：`FakeEditor` 的 `font_typefaces` 不含 `Bold` → 粗体文字用默认字形，`warnings` 有一条
+  - `test_texture_unchanged_not_touched`：重导时哈希相同 → 假编辑器的 `delete_asset` / `import_texture` 调用数为 0
+  - `test_texture_changed_reimported`：哈希变了、只被本 WBP 引用 → 先 `delete_asset` 再 `import_texture` 同名，用它的显示控件笔刷重设，记录哈希更新
+  - `test_texture_changed_external_ref_skipped`：哈希变了、`referencers` 还含 `/Game/Other/WBP_Other` → 不删不导，`warnings` 含 `T_xxx` 与 `WBP_Other`，记录保留旧哈希
   - `test_orphan_textures`：`Textures/` 下预置一张不在产物里的 `T_old_e99` → 出现在 `orphanTextures`，未被删除
   - `test_reimport_keeps_manual_widget`：首导 → 手加 `MyButton` → 重导 → `MyButton` 还在、无重复容器
   - `test_preflight_blocks_writes`：分别打开 `pie`、记录损坏、WBP 在但记录缺失、记录在但 WBP 缺失、WBP 被锁、`font` 加载失败 → 抛中文错误，且假编辑器的写操作计数为 0
@@ -264,7 +267,7 @@ git commit -m "feat: seedance-ui-to-unreal 包骨架与 layout.json 解析"
 - Consumes：Task 7 的 `REQUEST` 字段；Task 1 记下的 MCP 握手
 - Produces：
   - CLI：`python run_import.py --source <zip|dir> --project <dir> --import-dir /Game/... [--wbp-name N] [--font /Game/...] [--capture <png>]`；stdout 只打印 ImportReport JSON；错误打印到 stderr，退出码 1（导入错误）/ 2（连接或环境错误）。
-  - 函数：`extract_source(src, project) -> (root_dir, cleanup)`（zip 按 UTF-8 解文件名，越界条目抛错；目录直接用）；`check_slices(layout, root) -> None`（任一切图不存在抛中文错误）；`bundle_script(editor_dir, request: dict) -> str`（按 `errors, layout, naming, geometry, record, planner, tools, apply, main` 顺序拼接，删 `from .` 行，开头 `REQUEST = json.loads(<字面量>)`）；`mcp_endpoint(project) -> str`（读 `$PROJECT/.mcp.json`）；`McpClient(url).call_tool(toolset, tool, args, timeout) -> dict`；`check_project(client, project)`（编辑器工程名 ≠ `.uproject` 名就报错，具体工具按 Task 1）。
+  - 函数：`extract_source(src, project) -> (root_dir, cleanup)`（zip 按 UTF-8 解文件名，越界条目抛错；目录直接用）；`check_slices(layout, root) -> None`（任一切图不存在抛中文错误）；`slice_hashes(layout, root) -> {image: sha256 hex}`；`bundle_script(editor_dir, request: dict) -> str`（按 `errors, layout, naming, geometry, record, planner, tools, apply, main` 顺序拼接，删 `from .` 行，开头 `REQUEST = json.loads(<字面量>)`）；`mcp_endpoint(project) -> str`（读 `$PROJECT/.mcp.json`）；`McpClient(url).call_tool(toolset, tool, args, timeout) -> dict`；`check_project(client, project)`（编辑器工程名 ≠ `.uproject` 名就报错，具体工具按 Task 1）。
 
 - [ ] **Step 1：写失败测试**
   - `test_extract_zip_utf8_names`：用 `zipfile` 现造一个不带 UTF-8 标志、含 `slices/格子_1.png` 的 zip → 解出文件存在；含 `../evil.png` 的 zip 抛错；`cleanup()` 后目录不存在

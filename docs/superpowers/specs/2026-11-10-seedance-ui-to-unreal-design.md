@@ -95,7 +95,10 @@ Root            CanvasPanel
 
 - 路径：`<导入目录>/Textures/T_<type>_<id>`。`sameAs` 非空时用主元素的 type 与 id，同款元素共用一张。名字由 id 推出，ui-maker 里改元素名不换资源。
 - 设置：`CompressionSettings = UserInterface2D`、`LODGroup = UI`、`MipGenSettings = NoMipmaps`。
-- 重导时按同一资源名覆盖导入，资源路径不变、引用不断（**待验证 V1**）。
+- 重导时贴图怎么更新（2026-11-10 V1 验证后由用户定）：MCP 的 `TextureTools.import_file` 遇到同名资产直接报错，不能原地覆盖；`AssetTools.delete` 会强删并把内存里所有引用清空。所以：
+  - 启动器算每张切图文件的 SHA-256，记录里存「贴图名 → 哈希」。哈希没变：不碰贴图。
+  - 哈希变了（或贴图存在但记录里没有它的哈希）：查引用者（`AssetTools.get_referencers`）。只有本 Widget Blueprint 引用（或没人引用）→ 删除、同名重新导入、重设导入设置，并给所有用它的显示控件重设笔刷；还有别的资产引用 → 不动这张贴图，`warnings` 里列出「T_xxx 被 <资产> 引用，切图已更新但没有替换，请手动处理」，记录里保留旧哈希（下次重导还会提示）。
+  - 引用永远不会被悄悄清空。
 - 本次产物用不到的贴图不删，报告 `orphanTextures`。
 
 ### 导入记录
@@ -110,6 +113,7 @@ Root            CanvasPanel
   "widgetBlueprint": "/Game/UI/Generated/X/WBP_X",
   "designWidth": 2560, "designHeight": 1440, "layoutVersion": 1,
   "rootWidgets": { "root": "Root", "scaleBox": "ScaleBox", "sizeBox": "SizeBox", "design": "Design" },
+  "textures": { "T_button_e62": "<切图文件 SHA-256>" },
   "elements": [
     { "elementId": "e62", "container": "button_e62", "view": "button_e62_Button",
       "sourceName": "升级", "type": "button", "layoutParentId": "e1" }
@@ -216,7 +220,7 @@ UMG 控件没有 Unity fileID 那样的稳定 id，只能按控件名认：
 
 ## 实现第一步要验证的事（结论不符就回来改设计）
 
-- **V1 贴图原地覆盖**：`TextureTools.import_file` 对已存在的同名资源是原地重导（路径与引用不变），还是失败 / 另建。
+- **V1 贴图原地覆盖**：已验证——不能原地覆盖，改为「第 2 节 · 贴图」里的哈希 + 引用检查方案。
 - **V2 截图**：怎么拿到设计分辨率下干净的设计器画布截图。
 - **V3 属性写入**：CanvasPanelSlot 的 LayoutData、Button / CheckBox 的 WidgetStyle、ProgressBar 的 WidgetStyle 能用 `ObjectTools.set_properties` 写进去，编译、保存后保持。
 - **V4 HTTP 调用**：本地启动器经 MCP HTTP 调 `call_tool` → `execute_tool_script` 的会话握手与超时；一次脚本执行能否在合理时间（目标 < 2 分钟）内处理 65 个元素。
