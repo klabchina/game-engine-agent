@@ -62,6 +62,8 @@ class FlowTests(unittest.TestCase):
         self.assertEqual(t.slot_props["text_e3_Text"]["bAutoSize"], True)
         pb = t.props["bar_e11_ProgressBar"]
         self.assertEqual((pb["percent"], pb["barFillType"]), (1.0, "LeftToRight"))
+        # ProgressBar 默认用蓝色给填充着色，要设成白色才是切图原色
+        self.assertEqual(pb["fillColorAndOpacity"], {"r": 1, "g": 1, "b": 1, "a": 1})
         self.assertEqual(t.props["tab_e9_CheckBox"]["widgetStyle"]["checkBoxType"], "ToggleButton")
         # 贴图：8 张，导入设置是 UI
         textures = [p for p in self.fake.assets if p.startswith("/Game/Tests/X/Textures/")]

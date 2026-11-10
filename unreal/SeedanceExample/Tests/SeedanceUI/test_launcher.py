@@ -138,6 +138,13 @@ class LauncherTests(unittest.TestCase):
         with self.assertRaises(run_import.LauncherError):
             run_import.mcp_endpoint(self.proj)
 
+    def test_disk_path_accepts_msys_form(self):
+        self.assertEqual(run_import.disk_path("/d/ai/x.zip"), "D:/ai/x.zip")
+        self.assertEqual(run_import.disk_path("/c/"), "C:/")
+        self.assertEqual(run_import.disk_path("D:/ai/x"), "D:/ai/x")
+        self.assertEqual(run_import.disk_path("relative/x"), "relative/x")
+        self.assertEqual(run_import.disk_path("/Game/x"), "/Game/x")
+
     def test_rejects_mangled_import_dir(self):
         with self.assertRaises(run_import.LauncherError) as cm:
             run_import.check_import_dir("C:/Program Files/Git/Game/UI/X")

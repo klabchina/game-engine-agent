@@ -45,6 +45,15 @@ class ToolError(Exception):
 
 # ---------- 产物 ----------
 
+def disk_path(p):
+    """Git Bash 风格的 /d/foo 换成 D:/foo（MSYS_NO_PATHCONV=1 时 Git Bash 不会替我们换）"""
+    if p and len(p) >= 3 and p[0] == "/" and p[1].isalpha() and p[2] == "/":
+        return p[1].upper() + ":" + p[2:]
+    if p and len(p) == 2 and p[0] == "/" and p[1].isalpha():
+        return p[1].upper() + ":/"
+    return p
+
+
 def extract_source(source, project):
     """返回 (产物根目录, cleanup)。zip 解到 <工程>/Saved/SeedanceUiImport/<随机>/；目录直接用"""
     if os.path.isdir(source):
@@ -293,6 +302,7 @@ def main(argv=None):
     ap.add_argument("--font", default="")
     ap.add_argument("--capture", default="")
     args = ap.parse_args(argv)
+    args.source, args.project, args.capture = disk_path(args.source), disk_path(args.project), disk_path(args.capture)
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")

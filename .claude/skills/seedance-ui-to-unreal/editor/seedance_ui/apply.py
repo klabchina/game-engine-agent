@@ -172,7 +172,8 @@ class Executor:
         if not cls.endswith(".Button") and not cls.endswith(".CheckBox"):
             values["visibility"] = "HitTestInvisible"
         if cls.endswith(".ProgressBar"):
-            values.update({"percent": 1.0, "barFillType": "LeftToRight"})
+            # ProgressBar 默认用蓝色给填充着色，设成白色才是切图原色
+            values.update({"percent": 1.0, "barFillType": "LeftToRight", "fillColorAndOpacity": {"r": 1, "g": 1, "b": 1, "a": 1}})
         set_widget(self.wbp, o["name"], values)
 
     def text(self, name, el):
