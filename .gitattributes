@@ -6,3 +6,4 @@ unreal/**/*.png filter=lfs diff=lfs merge=lfs -text
 unreal/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
 unreal/**/*.locres filter=lfs diff=lfs merge=lfs -text
 unreal/**/*.archive filter=lfs diff=lfs merge=lfs -text
+unreal/**/*.zip filter=lfs diff=lfs merge=lfs -text
