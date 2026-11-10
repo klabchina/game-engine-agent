@@ -1,4 +1,4 @@
-// 导入记录的位置与读写。记录统一放在 Assets/SeedanceUI/ 下，按 Prefab 路径镜像命名；
+// 导入记录的位置与读写。记录统一放在 Assets/SeedanceKlab/UI/ 下，按 Prefab 路径镜像命名；
 // 但认记录以 Prefab 的 GUID 为准——程序挪了 / 改名了 Prefab 也找得回来，下次保存时搬到新的镜像路径。
 
 using System;
@@ -12,10 +12,10 @@ namespace Seedance.UiImport.Editor
 {
     public static class UiRecordStore
     {
-        public const string Root = "Assets/SeedanceUI";
+        public const string Root = "Assets/SeedanceKlab/UI";
         public const string RootParentId = "<root>";
 
-        /// <summary>Assets/UI/X.prefab → Assets/SeedanceUI/UI/X.json</summary>
+        /// <summary>Assets/UI/X.prefab → Assets/SeedanceKlab/UI/UI/X.json</summary>
         public static string RecordPathFor(string prefabPath)
         {
             var p = prefabPath.Replace('\\', '/');

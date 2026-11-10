@@ -4,6 +4,7 @@
 
 - [ ] 通过 Unity CLI 测试场景性能指标，并分析出原因
 - [x] 通过 Unity CLI 直接创建 UI 界面（skill：`.claude/skills/seedance-ui-to-unity/`）
+- [x] 通过 Unity CLI 把 Tripo / 混元的绑骨 FBX 做成带 Animator 的角色 Prefab（skill：`.claude/skills/seedance-3dmodel-to-unity/`）
 - [ ] 通过 Unreal 命令行测试关卡性能指标，并分析出原因
 - [ ] 通过 Unreal 命令行直接创建 UI 界面（UMG）
 
@@ -31,11 +32,14 @@ Seedance 美术管线：UI 整体切图
 ```
 /plugin marketplace add klabchina/game-engine-agent
 /plugin install seedance-ui-to-unity@game-engine-agent
+/plugin install seedance-3dmodel-to-unity@game-engine-agent
 ```
 
 更新：`/plugin marketplace update game-engine-agent`。机器上要有 Unity CLI（`unity`）和 Unity 6 Editor；目标工程不用提前准备。
 
 实现：skill `seedance-ui-to-unity`（`.claude/skills/seedance-ui-to-unity/SKILL.md`），对 Claude 说「把这份 ui-maker 产物导入 Unity 工程 X」即可。设计见 `docs/superpowers/specs/2026-10-21-seedance-ui-to-unity-design.md`，开发 / 测试工程在 `unity/SeedanceUiExample/`（跑测试：`bash unity/SeedanceUiExample/run-tests.sh`，先关掉该工程的 Editor）。
+
+模型导入：skill `seedance-3dmodel-to-unity`（`.claude/skills/seedance-3dmodel-to-unity/SKILL.md`），对 Claude 说「把这个 Tripo / 混元的 FBX 产物导入 Unity 工程 X」即可。设计见 `docs/superpowers/specs/2026-11-04-seedance-3dmodel-to-unity-design.md`，测试与 UI 共用 `unity/SeedanceUiExample/`。
 
 ## 可用 Unity Editor 工具 —— 160 个
 

@@ -47,12 +47,12 @@ namespace Seedance.UiImport.Tests
 
         [Test]
         public void RecordPath_Mirrors() =>
-            Assert.AreEqual("Assets/SeedanceUI/UI/Generated/CharacterPanel.json",
+            Assert.AreEqual("Assets/SeedanceKlab/UI/UI/Generated/CharacterPanel.json",
                 UiRecordStore.RecordPathFor("Assets/UI/Generated/CharacterPanel.prefab"));
 
         [Test]
         public void RecordPath_NonAsciiAndSpaces() =>
-            Assert.AreEqual("Assets/SeedanceUI/UI 界面/X.json", UiRecordStore.RecordPathFor("Assets/UI 界面/X.prefab"));
+            Assert.AreEqual("Assets/SeedanceKlab/UI/UI 界面/X.json", UiRecordStore.RecordPathFor("Assets/UI 界面/X.prefab"));
 
         [Test]
         public void SaveThenFind_RoundTrip()

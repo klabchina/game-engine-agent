@@ -1,0 +1,7 @@
+{
+    "name": "Seedance.ModelImport.Editor",
+    "rootNamespace": "Seedance.ModelImport.Editor",
+    "references": [],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
+}
